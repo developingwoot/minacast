@@ -36,6 +36,11 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _refreshFeed(WidgetRef ref) async {
+    ref.invalidate(feedProvider);
+    await ref.read(feedProvider.future);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Episode>> feedState = ref.watch(feedProvider);
@@ -72,18 +77,21 @@ class HomeScreen extends ConsumerWidget {
             return _HomeEmptyState(onSearchPressed: () => _openSearch(context));
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.only(bottom: 24),
-            itemCount: episodes.length,
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(height: 1),
-            itemBuilder: (BuildContext context, int index) {
-              final Episode episode = episodes[index];
-              return EpisodeListItem(
-                episode: episode,
-                onTap: () => _openEpisodeDetail(context, episode),
-              );
-            },
+          return RefreshIndicator(
+            onRefresh: () => _refreshFeed(ref),
+            child: ListView.separated(
+              padding: const EdgeInsets.only(bottom: 24),
+              itemCount: episodes.length,
+              separatorBuilder: (BuildContext context, int index) =>
+                  const Divider(height: 1),
+              itemBuilder: (BuildContext context, int index) {
+                final Episode episode = episodes[index];
+                return EpisodeListItem(
+                  episode: episode,
+                  onTap: () => _openEpisodeDetail(context, episode),
+                );
+              },
+            ),
           );
         },
       ),

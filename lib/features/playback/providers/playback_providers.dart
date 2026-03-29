@@ -62,6 +62,8 @@ class PlaybackStateNotifier extends Notifier<PlaybackViewState> {
   PlaybackViewState build() {
     final PlaybackController controller = ref.watch(playbackControllerProvider);
 
+    _subscriptions.clear();
+
     ref.onDispose(() {
       for (final StreamSubscription<dynamic> subscription in _subscriptions) {
         unawaited(subscription.cancel());

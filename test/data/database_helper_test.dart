@@ -149,6 +149,76 @@ void main() {
     });
   });
 
+  // ── Group 2b: Transactional Podcast + Episodes Insert ────────────────────
+
+  group('insertPodcastWithEpisodes', () {
+    test('inserts podcast and all episodes atomically', () async {
+      final Podcast p = makePodcast();
+      final List<Episode> episodes = <Episode>[
+        makeEpisode(guid: 'ep-1', pubDate: 1000),
+        makeEpisode(guid: 'ep-2', pubDate: 2000),
+        makeEpisode(guid: 'ep-3', pubDate: 3000),
+      ];
+      await DatabaseHelper.instance.insertPodcastWithEpisodes(p, episodes);
+
+      final Podcast? storedPodcast = await DatabaseHelper.instance
+          .getPodcastByUrl(p.rssUrl);
+      expect(storedPodcast, isNotNull);
+
+      final List<Episode> storedEpisodes = await DatabaseHelper.instance
+          .getEpisodesForPodcast(p.rssUrl);
+      expect(storedEpisodes.length, equals(3));
+    });
+
+    test('replaces podcast data on re-insert', () async {
+      final Podcast p = makePodcast();
+      await DatabaseHelper.instance.insertPodcastWithEpisodes(
+        p,
+        <Episode>[makeEpisode(guid: 'ep-1')],
+      );
+
+      final Podcast updated = Podcast(
+        rssUrl: p.rssUrl,
+        title: 'Updated Title',
+        author: p.author,
+        description: p.description,
+        artworkUrl: p.artworkUrl,
+        lastCheckedAt: 9999,
+      );
+      await DatabaseHelper.instance.insertPodcastWithEpisodes(
+        updated,
+        <Episode>[makeEpisode(guid: 'ep-1'), makeEpisode(guid: 'ep-2')],
+      );
+
+      final Podcast? result = await DatabaseHelper.instance.getPodcastByUrl(
+        p.rssUrl,
+      );
+      expect(result!.title, equals('Updated Title'));
+      expect(result.lastCheckedAt, equals(9999));
+
+      final List<Episode> episodes = await DatabaseHelper.instance
+          .getEpisodesForPodcast(p.rssUrl);
+      expect(episodes.length, equals(2));
+    });
+
+    test('works with empty episode list', () async {
+      final Podcast p = makePodcast();
+      await DatabaseHelper.instance.insertPodcastWithEpisodes(
+        p,
+        <Episode>[],
+      );
+
+      final Podcast? result = await DatabaseHelper.instance.getPodcastByUrl(
+        p.rssUrl,
+      );
+      expect(result, isNotNull);
+
+      final List<Episode> episodes = await DatabaseHelper.instance
+          .getEpisodesForPodcast(p.rssUrl);
+      expect(episodes, isEmpty);
+    });
+  });
+
   // ── Group 3: Episodes ──────────────────────────────────────────────────────
 
   group('Episodes', () {

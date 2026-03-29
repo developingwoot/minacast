@@ -33,6 +33,7 @@ class PodcastDetailState {
 final Provider<RssFeedService> rssFeedServiceProvider =
     Provider<RssFeedService>((Ref ref) => RssFeedService());
 
+// Type inferred — Riverpod does not export the family provider type publicly.
 final podcastDetailProvider =
     AsyncNotifierProvider.family<
       PodcastDetailNotifier,
@@ -75,10 +76,9 @@ class PodcastDetailNotifier extends AsyncNotifier<PodcastDetailState> {
       lastCheckedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    await ref.read(databaseHelperProvider).insertPodcast(podcastToInsert);
-    for (final Episode episode in current.episodes) {
-      await ref.read(databaseHelperProvider).upsertEpisode(episode);
-    }
+    await ref
+        .read(databaseHelperProvider)
+        .insertPodcastWithEpisodes(podcastToInsert, current.episodes);
 
     ref.invalidate(feedProvider);
     state = AsyncData(current.copyWith(isSubscribed: true));

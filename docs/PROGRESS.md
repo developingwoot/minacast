@@ -57,7 +57,13 @@
   - Queue CRUD exists in `DatabaseHelper` (`enqueue`, `getQueue`, `updateQueueOrder`, `removeFromQueue`, `clearQueue`)
   - Settings persistence exists in `DatabaseHelper` via `getSetting` / `setSetting`
   - Episode progress helpers exist in `DatabaseHelper` for listened position, completion state, and local file path updates
-  - Current suite is green: `flutter test` passes with 48 tests and `flutter analyze` passes with no issues
+- [x] **Pre-Phase-5 architectural cleanup**
+  - Added `DatabaseHelper.insertPodcastWithEpisodes` — wraps podcast + episodes inserts in a single transaction; subscribe flow and Phase 5 background sync should use this
+  - Added `RefreshIndicator` to Home feed so users (and Phase 5 background inserts) can pull to refresh
+  - Fixed `PlaybackStateNotifier` subscription list accumulation on rebuild (was minor memory leak)
+  - Added explanatory comment to `podcastDetailProvider` noting Riverpod does not export the family provider type for explicit annotation
+  - Removed stale "no tests exist" note from AGENTS.md Testing Configuration section
+  - Current suite is green: `flutter test` passes with 51 tests and `flutter analyze` passes with no issues
 
 ---
 
@@ -126,3 +132,4 @@ Items are ordered so each session builds on the last and ends with something ver
 - `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.
 - Phase 3 / 4 still need manual Android verification for real audio playback, lock screen controls, notification shade controls, background resume behavior, queue reordering, and autoplay on an emulator or physical device.
 - The Minacast SVG logo exists at `assets/images/minacast.svg`, but in-app usage still needs either a PNG export or approval to add an SVG rendering package before we can place it in Flutter UI.
+- **Phase 5 prerequisite:** Add `PRAGMA journal_mode=WAL` to `DatabaseHelper._initDb` before implementing the WorkManager background isolate, to prevent write-lock contention between the main and background isolates. See DECISIONS.md "WAL Mode for SQLite".

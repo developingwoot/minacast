@@ -195,3 +195,39 @@ _This section is for architectural decisions made after the project has started.
 - **Why:** The app initializes `audio_service` at startup, and the default `FlutterActivity` did not provide the cached Flutter engine integration that `audio_service` expects. On-device startup failed with `The Activity class declared in your AndroidManifest.xml is wrong` until the activity class matched the plugin contract.
 - **Consequences:** Android startup now aligns with the `audio_service` integration guide, and `AudioService.init()` can complete without the manifest/activity mismatch crash seen during Phase 3 verification. Future Android activity customization should preserve the `AudioServiceActivity` behavior or explicitly reimplement its engine-provision methods.
 - **Revisit if:** We later need a `FlutterFragmentActivity` subclass for another plugin, in which case we should move to `AudioServiceFragmentActivity` or an equivalent custom activity that still provides the correct engine hooks.
+
+---
+
+## Transaction-Wrapped Batch Inserts
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** All operations that insert a podcast plus its episodes use a single SQLite transaction via `DatabaseHelper.insertPodcastWithEpisodes`.
+- **Why:** The subscribe flow previously inserted the podcast row and then looped through episodes one at a time. If the app crashed or an error occurred mid-loop, the database would contain a podcast with a partial episode set and no rollback. Phase 5's background sync will perform the same pattern.
+- **Alternatives considered:** Keeping individual inserts with retry logic — rejected because a transaction is simpler, atomic, and matches the existing `replaceQueueOrder` pattern.
+- **Consequences:** One new `DatabaseHelper` method wraps the insert in `db.transaction()`. The subscribe provider calls this instead of looping. Phase 5 background sync should reuse the same method.
+- **Revisit if:** Never — transactional batch inserts are strictly better than non-transactional loops.
+
+---
+
+## WAL Mode for SQLite (Phase 5 Prerequisite)
+
+- **Date:** 2026-03-29
+- **Status:** Planned — implement when Phase 5 begins
+- **Decision:** Enable `PRAGMA journal_mode=WAL` in `DatabaseHelper._initDb` alongside the existing `PRAGMA foreign_keys = ON`.
+- **Why:** Phase 5 introduces a WorkManager background isolate that will read and write the database concurrently with the main isolate. WAL mode allows concurrent reads during writes, reducing the risk of `DatabaseException` from write-lock contention. The current default journal mode (DELETE) serializes all access.
+- **Alternatives considered:** None — WAL is the standard recommendation for read-heavy workloads with occasional writes.
+- **Consequences:** No downside for this use case. WAL is the SQLite default on most modern platforms.
+- **Revisit if:** Never — WAL is strictly better for this workload.
+
+---
+
+## Schema Migration Deferred
+
+- **Date:** 2026-03-29
+- **Status:** Active (tech debt acknowledged)
+- **Decision:** Defer `onUpgrade` implementation until the first schema change is needed. Current `_dbVersion` remains 1.
+- **Why:** No schema changes are planned for Phase 5 or Phase 6. Adding migration infrastructure before it is needed would be speculative.
+- **Alternatives considered:** Implementing a migration framework now — rejected as premature given no planned schema changes.
+- **Consequences:** The first session that requires a schema change must implement `onUpgrade` before making the change. This is a prerequisite, not optional.
+- **Revisit if:** Any phase unexpectedly needs a new column or table — implement `onUpgrade` first.

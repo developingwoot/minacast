@@ -80,8 +80,6 @@ Never deviate from this stack without explicit user approval. If a new package i
 
 ## Testing Configuration
 
-> **Note:** This section should be updated once test infrastructure is in place. At project creation time, no tests exist yet.
-
 - **Test framework:** Flutter's built-in `flutter_test` package (ships with the SDK). For widget tests, use `flutter_test`. For unit tests, plain Dart `test` package.
 - **Run full suite:** `flutter test`
 - **Run a single file:** `flutter test test/path/to/file_test.dart`

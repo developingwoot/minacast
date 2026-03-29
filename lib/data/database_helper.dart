@@ -173,6 +173,34 @@ class DatabaseHelper {
     }
   }
 
+  /// Inserts a podcast and all its episodes in a single transaction.
+  /// If any insert fails, the entire operation is rolled back.
+  Future<void> insertPodcastWithEpisodes(
+    Podcast podcast,
+    List<Episode> episodes,
+  ) async {
+    try {
+      final Database db = await database;
+      await db.transaction((Transaction txn) async {
+        await txn.insert(
+          'podcasts',
+          podcast.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        for (final Episode episode in episodes) {
+          await txn.insert(
+            'episodes',
+            episode.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      });
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('insertPodcastWithEpisodes failed: $e');
+      rethrow;
+    }
+  }
+
   // ── Episodes ──────────────────────────────────────────────────────────────
 
   Future<void> insertEpisode(Episode episode) async {
