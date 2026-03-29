@@ -159,3 +159,12 @@ _This section is for architectural decisions made after the project has started.
 - **Why:** `flutter_local_notifications` requires core library desugaring in this project setup, and the Android build failed at `:app:checkDebugAarMetadata` until it was enabled.
 - **Consequences:** `android/app/build.gradle.kts` now enables `isCoreLibraryDesugaringEnabled` in `compileOptions` and declares the desugaring library dependency. This is now part of the baseline Android build configuration for Minacast.
 - **Revisit if:** The notification plugin changes its requirements or the Android Gradle setup is upgraded in a way that makes the explicit desugaring dependency unnecessary.
+
+## Pass `Episode` Directly Into Episode Detail
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** `EpisodeDetailScreen` receives an `Episode` object directly from the existing list screens instead of introducing a dedicated provider or lookup layer for Session 3.1.
+- **Why:** The app already has the full episode payload available at the tap site, and Session 3.1 only needs presentation plus placeholder actions. Passing the model directly keeps the implementation small, avoids premature state plumbing, and leaves playback integration free to evolve in Session 3.2 if it needs a richer source of truth.
+- **Consequences:** Home and Podcast Detail own navigation into Episode Detail and pass the selected episode through the route constructor. If playback, queue, or progress persistence later require fresh DB reads or reactive updates, we may introduce a provider then rather than carrying that complexity before it is needed.
+- **Revisit if:** Episode Detail needs live-updating playback state, DB-backed mutations, or data that is not already present on the `Episode` model.
