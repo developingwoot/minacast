@@ -150,3 +150,12 @@ _This section is for architectural decisions made after the project has started.
 - **Why:** Developer chose dark & minimal as the overall vibe (content-first, similar to Pocket Casts dark mode) and electric blue as the accent.
 - **Consequences:** ThemeData is set up in `main.dart` using `ColorScheme.dark()` overrides with `useMaterial3: true`. The app logo SVG is at `assets/images/minacast.svg` — the accent color may be revisited during Phase 7 if it conflicts with brand colors in the final logo.
 - **Revisit if:** Final logo introduces a different primary color that conflicts with `#1DB9FF`.
+
+## Android Desugaring for Notifications
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** Enable core library desugaring in the Android app module and include `com.android.tools:desugar_jdk_libs`.
+- **Why:** `flutter_local_notifications` requires core library desugaring in this project setup, and the Android build failed at `:app:checkDebugAarMetadata` until it was enabled.
+- **Consequences:** `android/app/build.gradle.kts` now enables `isCoreLibraryDesugaringEnabled` in `compileOptions` and declares the desugaring library dependency. This is now part of the baseline Android build configuration for Minacast.
+- **Revisit if:** The notification plugin changes its requirements or the Android Gradle setup is upgraded in a way that makes the explicit desugaring dependency unnecessary.

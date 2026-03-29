@@ -8,6 +8,10 @@
   - Typed model classes: `Podcast`, `Episode`, `QueueEntry`
   - 23 unit tests passing against in-memory SQLite (`sqflite_common_ffi`)
   - App logo SVG added at `assets/images/minacast.svg`
+- [x] **Android build config: core library desugaring enabled**
+  - Added `isCoreLibraryDesugaringEnabled = true` and `desugar_jdk_libs` to `android/app/build.gradle.kts` to satisfy `flutter_local_notifications`
+  - Verified the original `:app:checkDebugAarMetadata` failure is resolved
+  - Ran `flutter test` successfully: 35 tests passed
 
 ---
 
@@ -20,16 +24,6 @@ _(nothing yet)_
 ## Not Started
 
 Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 1 (Discover → Subscribe) is completed end-to-end before Journey 2 (Streaming) begins, and Journey 2 before Journey 3 (Queue).
-
----
-
-### Phase 1 — Project Scaffold & Data Layer
-
-- [ ] **1.2 — SQLite schema + database helper**
-  - Sessions: 1
-  - What gets built: `DatabaseHelper` singleton that opens the database, runs `CREATE TABLE` migrations for `podcasts`, `episodes`, `queue`, and `settings`, and seeds default settings rows. DAOs (or plain query methods) for basic CRUD on each table.
-  - Blocks: all data-reading UI and all Riverpod providers.
-  - Verify: Add a debug button or use Flutter DevTools to confirm tables exist and default settings rows are present after first launch.
 
 ---
 
@@ -161,4 +155,4 @@ Items are ordered so each session builds on the last and ends with something ver
 
 ## Blocked / Open Questions
 
-_(nothing yet — add items here during development when a decision, external dependency, or missing information is blocking progress)_
+- `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.

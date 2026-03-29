@@ -54,8 +54,9 @@ void main() {
       final List<Map<String, Object?>> tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
       );
-      final List<String> names =
-          tables.map((t) => t['name'] as String).toList();
+      final List<String> names = tables
+          .map((t) => t['name'] as String)
+          .toList();
       expect(names, containsAll(['episodes', 'podcasts', 'queue', 'settings']));
     });
 
@@ -79,11 +80,10 @@ void main() {
       // Trigger a second open cycle which would re-seed if broken.
       // We access the db directly to re-run the seed method via a raw insert.
       final db = await DatabaseHelper.instance.database;
-      await db.insert(
-        'settings',
-        {'key': 'dark_mode', 'value': 'false'},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      await db.insert('settings', {
+        'key': 'dark_mode',
+        'value': 'false',
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
       // User value should still be 'true'.
       expect(
         await DatabaseHelper.instance.getSetting('dark_mode'),
@@ -98,8 +98,9 @@ void main() {
     test('insertPodcast and getPodcastByUrl roundtrip', () async {
       final Podcast p = makePodcast();
       await DatabaseHelper.instance.insertPodcast(p);
-      final Podcast? result =
-          await DatabaseHelper.instance.getPodcastByUrl(p.rssUrl);
+      final Podcast? result = await DatabaseHelper.instance.getPodcastByUrl(
+        p.rssUrl,
+      );
       expect(result, isNotNull);
       expect(result!.rssUrl, equals(p.rssUrl));
       expect(result.title, equals(p.title));
@@ -110,8 +111,8 @@ void main() {
     });
 
     test('getAllPodcasts returns empty list when no rows', () async {
-      final List<Podcast> result =
-          await DatabaseHelper.instance.getAllPodcasts();
+      final List<Podcast> result = await DatabaseHelper.instance
+          .getAllPodcasts();
       expect(result, isEmpty);
     });
 
@@ -122,8 +123,8 @@ void main() {
       await DatabaseHelper.instance.insertPodcast(
         makePodcast(rssUrl: 'https://b.com/feed.xml'),
       );
-      final List<Podcast> result =
-          await DatabaseHelper.instance.getAllPodcasts();
+      final List<Podcast> result = await DatabaseHelper.instance
+          .getAllPodcasts();
       expect(result.length, equals(2));
     });
 
@@ -131,8 +132,9 @@ void main() {
       final Podcast p = makePodcast();
       await DatabaseHelper.instance.insertPodcast(p);
       await DatabaseHelper.instance.deletePodcast(p.rssUrl);
-      final Podcast? result =
-          await DatabaseHelper.instance.getPodcastByUrl(p.rssUrl);
+      final Podcast? result = await DatabaseHelper.instance.getPodcastByUrl(
+        p.rssUrl,
+      );
       expect(result, isNull);
     });
 
@@ -140,8 +142,9 @@ void main() {
       final Podcast p = makePodcast();
       await DatabaseHelper.instance.insertPodcast(p);
       await DatabaseHelper.instance.updatePodcastLastChecked(p.rssUrl, 9999);
-      final Podcast? result =
-          await DatabaseHelper.instance.getPodcastByUrl(p.rssUrl);
+      final Podcast? result = await DatabaseHelper.instance.getPodcastByUrl(
+        p.rssUrl,
+      );
       expect(result!.lastCheckedAt, equals(9999));
     });
   });
@@ -157,8 +160,9 @@ void main() {
     test('insertEpisode and getEpisodeByGuid roundtrip', () async {
       final Episode e = makeEpisode();
       await DatabaseHelper.instance.insertEpisode(e);
-      final Episode? result =
-          await DatabaseHelper.instance.getEpisodeByGuid(e.guid);
+      final Episode? result = await DatabaseHelper.instance.getEpisodeByGuid(
+        e.guid,
+      );
       expect(result, isNotNull);
       expect(result!.guid, equals(e.guid));
       expect(result.podcastRssUrl, equals(e.podcastRssUrl));
@@ -176,15 +180,16 @@ void main() {
         makePodcast(rssUrl: 'https://other.com/feed.xml'),
       );
       await DatabaseHelper.instance.insertEpisode(
-        makeEpisode(guid: 'ep-1', podcastRssUrl: 'https://example.com/feed.xml'),
+        makeEpisode(
+          guid: 'ep-1',
+          podcastRssUrl: 'https://example.com/feed.xml',
+        ),
       );
       await DatabaseHelper.instance.insertEpisode(
         makeEpisode(guid: 'ep-2', podcastRssUrl: 'https://other.com/feed.xml'),
       );
-      final List<Episode> results =
-          await DatabaseHelper.instance.getEpisodesForPodcast(
-        'https://example.com/feed.xml',
-      );
+      final List<Episode> results = await DatabaseHelper.instance
+          .getEpisodesForPodcast('https://example.com/feed.xml');
       expect(results.length, equals(1));
       expect(results.first.guid, equals('ep-1'));
     });
@@ -193,8 +198,9 @@ void main() {
       final Episode e = makeEpisode();
       await DatabaseHelper.instance.insertEpisode(e);
       await DatabaseHelper.instance.updateListenedPosition(e.guid, 120);
-      final Episode? result =
-          await DatabaseHelper.instance.getEpisodeByGuid(e.guid);
+      final Episode? result = await DatabaseHelper.instance.getEpisodeByGuid(
+        e.guid,
+      );
       expect(result!.listenedPositionSeconds, equals(120));
     });
 
@@ -202,8 +208,9 @@ void main() {
       final Episode e = makeEpisode();
       await DatabaseHelper.instance.insertEpisode(e);
       await DatabaseHelper.instance.markEpisodeCompleted(e.guid);
-      final Episode? result =
-          await DatabaseHelper.instance.getEpisodeByGuid(e.guid);
+      final Episode? result = await DatabaseHelper.instance.getEpisodeByGuid(
+        e.guid,
+      );
       expect(result!.isCompleted, equals(1));
     });
 
@@ -219,8 +226,9 @@ void main() {
         pubDate: original.pubDate,
       );
       await DatabaseHelper.instance.upsertEpisode(updated);
-      final Episode? result =
-          await DatabaseHelper.instance.getEpisodeByGuid(original.guid);
+      final Episode? result = await DatabaseHelper.instance.getEpisodeByGuid(
+        original.guid,
+      );
       expect(result!.title, equals('Updated Title'));
     });
 
@@ -228,8 +236,9 @@ void main() {
       final Episode e = makeEpisode();
       await DatabaseHelper.instance.insertEpisode(e);
       await DatabaseHelper.instance.deletePodcast(e.podcastRssUrl);
-      final Episode? result =
-          await DatabaseHelper.instance.getEpisodeByGuid(e.guid);
+      final Episode? result = await DatabaseHelper.instance.getEpisodeByGuid(
+        e.guid,
+      );
       expect(result, isNull);
     });
   });
@@ -261,8 +270,10 @@ void main() {
       await DatabaseHelper.instance.enqueue('ep-1', 0);
       await DatabaseHelper.instance.enqueue('ep-2', 10);
       final queue = await DatabaseHelper.instance.getQueue();
-      expect(queue.map((e) => e.episodeGuid).toList(),
-          equals(['ep-1', 'ep-2', 'ep-3']));
+      expect(
+        queue.map((e) => e.episodeGuid).toList(),
+        equals(['ep-1', 'ep-2', 'ep-3']),
+      );
     });
 
     test('updateQueueOrder changes position', () async {
@@ -305,22 +316,25 @@ void main() {
 
   group('Settings', () {
     test('getSetting returns null for unknown key', () async {
-      final String? result =
-          await DatabaseHelper.instance.getSetting('nonexistent_key');
+      final String? result = await DatabaseHelper.instance.getSetting(
+        'nonexistent_key',
+      );
       expect(result, isNull);
     });
 
     test('setSetting inserts new key', () async {
       await DatabaseHelper.instance.setSetting('custom_key', 'custom_value');
-      final String? result =
-          await DatabaseHelper.instance.getSetting('custom_key');
+      final String? result = await DatabaseHelper.instance.getSetting(
+        'custom_key',
+      );
       expect(result, equals('custom_value'));
     });
 
     test('setSetting overwrites existing key', () async {
       await DatabaseHelper.instance.setSetting('dark_mode', 'true');
-      final String? result =
-          await DatabaseHelper.instance.getSetting('dark_mode');
+      final String? result = await DatabaseHelper.instance.getSetting(
+        'dark_mode',
+      );
       expect(result, equals('true'));
     });
   });

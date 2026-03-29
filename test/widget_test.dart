@@ -1,30 +1,89 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:minacast/main.dart';
+import 'package:minacast/data/database_helper.dart';
+import 'package:minacast/data/models/episode.dart';
+import 'package:minacast/features/home/providers/feed_provider.dart';
+import 'package:minacast/features/home/screens/home_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    DatabaseHelper.useInMemoryDatabaseForTests();
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUp(() async {
+    await DatabaseHelper.instance.resetForTest();
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  Widget buildTestApp(List<Episode> episodes) {
+    return ProviderScope(
+      overrides: [feedProvider.overrideWith((Ref ref) async => episodes)],
+      child: const MaterialApp(home: HomeScreen()),
+    );
+  }
+
+  testWidgets('home shows empty state when there are no subscriptions', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildTestApp(const <Episode>[]));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Your feed is empty.'), findsOneWidget);
+    expect(find.text('Search Podcasts'), findsOneWidget);
+  });
+
+  testWidgets('home search action opens search screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(buildTestApp(const <Episode>[]));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(find.byTooltip('Search podcasts'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('Search for a podcast to get started.'), findsOneWidget);
+  });
+
+  testWidgets('home feed shows seeded episodes newest first', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestApp(const <Episode>[
+        Episode(
+          guid: 'episode-2',
+          podcastRssUrl: 'https://example.com/feed.xml',
+          title: 'Newer Episode',
+          audioUrl: 'https://example.com/newer.mp3',
+          descriptionHtml: '<p>Newer</p>',
+          pubDate: 200,
+        ),
+        Episode(
+          guid: 'episode-1',
+          podcastRssUrl: 'https://example.com/feed.xml',
+          title: 'Older Episode',
+          audioUrl: 'https://example.com/older.mp3',
+          descriptionHtml: '<p>Older</p>',
+          pubDate: 100,
+        ),
+      ]),
+    );
+    await tester.pump();
+
+    expect(find.text('Newer Episode'), findsOneWidget);
+    expect(find.text('Older Episode'), findsOneWidget);
+
+    final Finder listTileFinder = find.byType(ListTile);
+    final List<ListTile> tiles = tester
+        .widgetList<ListTile>(listTileFinder)
+        .toList();
+    expect((tiles.first.title as Text).data, 'Newer Episode');
+    expect((tiles.last.title as Text).data, 'Older Episode');
   });
 }

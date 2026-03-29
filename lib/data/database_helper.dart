@@ -76,8 +76,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDb() async {
-    final String path =
-        testDbPath ?? join(await getDatabasesPath(), _dbName);
+    final String path = testDbPath ?? join(await getDatabasesPath(), _dbName);
     return openDatabase(
       path,
       version: _dbVersion,
@@ -148,10 +147,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> updatePodcastLastChecked(
-    String rssUrl,
-    int timestampMs,
-  ) async {
+  Future<void> updatePodcastLastChecked(String rssUrl, int timestampMs) async {
     try {
       final Database db = await database;
       await db.update(
@@ -169,11 +165,7 @@ class DatabaseHelper {
   Future<void> deletePodcast(String rssUrl) async {
     try {
       final Database db = await database;
-      await db.delete(
-        'podcasts',
-        where: 'rss_url = ?',
-        whereArgs: [rssUrl],
-      );
+      await db.delete('podcasts', where: 'rss_url = ?', whereArgs: [rssUrl]);
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('deletePodcast failed: $e');
       rethrow;
@@ -388,11 +380,10 @@ class DatabaseHelper {
   Future<void> setSetting(String key, String value) async {
     try {
       final Database db = await database;
-      await db.insert(
-        'settings',
-        {'key': key, 'value': value},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('settings', {
+        'key': key,
+        'value': value,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('setSetting failed: $e');
       rethrow;
