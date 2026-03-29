@@ -71,7 +71,7 @@ void main() {
       );
       expect(
         await DatabaseHelper.instance.getSetting('sleep_timer_default_minutes'),
-        equals('0'),
+        equals('30'),
       );
     });
 

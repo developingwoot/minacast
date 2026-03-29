@@ -30,11 +30,24 @@
   - Episode rows from Home and Podcast Detail now navigate into Episode Detail
   - `Play` and `Add to Queue` buttons are present as explicit placeholders, keeping playback and queue work scoped to later sessions
   - Added widget coverage for detail rendering and Home → Episode Detail navigation
+- [x] **3.2 — Audio playback: streaming + `audio_service` + `just_audio` integration**
+  - Added a single app-wide `PodcastAudioHandler` backed by `just_audio`, initialized through `AudioService.init()` before `runApp()`
+  - Episode Detail `Play` now starts playback from `local_file_path` when present, otherwise from `audio_url`
+  - Android media service and foreground playback manifest entries were added so notification and lock screen controls can register correctly on device
+- [x] **3.3 — Mini Player**
+  - Added a persistent `MiniPlayer` above the bottom nav that appears whenever a current episode exists, including paused playback
+  - Mini Player shows artwork, title, play/pause, and skip-forward controls and persists while navigating between app screens
+- [x] **3.4 — Full Player screen**
+  - Added a dedicated Full Player route with seek bar, elapsed / remaining time, skip ±30s, playback rate controls, sleep timer trigger, and a link back to show notes
+  - Playback speed is applied live and persisted immediately to the `settings` table for future episodes
+- [x] **3.5 — Playback position persistence**
+  - Added a playback persistence coordinator that writes listened position to SQLite roughly every 5 seconds during playback and flushes on pause/background
+  - Episode playback resumes from saved position for unfinished episodes and marks episodes complete while clearing saved progress at end of playback
 - [x] **Foundational data helpers completed ahead of later UI phases**
   - Queue CRUD exists in `DatabaseHelper` (`enqueue`, `getQueue`, `updateQueueOrder`, `removeFromQueue`, `clearQueue`)
   - Settings persistence exists in `DatabaseHelper` via `getSetting` / `setSetting`
   - Episode progress helpers exist in `DatabaseHelper` for listened position, completion state, and local file path updates
-  - Current suite is green: `flutter test` passes with 37 tests
+  - Current suite is green: `flutter test` passes with 42 tests and `flutter analyze` passes with no issues
 
 ---
 
@@ -46,35 +59,7 @@ _(nothing yet)_
 
 ## Not Started
 
-Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 1 (Discover → Subscribe) is now implemented, so the next unfinished work starts with Journey 2 (Streaming).
-
----
-
-### Phase 3 — Journey 2: Stream an Episode
-
-- [ ] **3.2 — Audio playback: streaming + `audio_service` + `just_audio` integration**
-  - Sessions: 2
-  - What gets built: `AudioHandler` subclassing `BaseAudioHandler` from `audio_service`, backed by `just_audio`. Handles `play`, `pause`, `seek`, `stop`, `skipForward` (+30s), `skipBackward` (−30s). Android MediaSession registration so lock screen and notification shade controls work. Play button on Episode Detail triggers streaming playback.
-  - Blocks: Mini Player, Full Player, position saving, speed control, sleep timer.
-  - Verify: Tap Play → audio streams. Lock the screen → controls appear on lock screen. Pull down notification shade → playback controls visible. Pause and resume work.
-
-- [ ] **3.3 — Mini Player**
-  - Sessions: 1
-  - What gets built: Persistent `MiniPlayer` widget pinned above the bottom nav bar, visible on all screens when audio is active. Shows episode artwork, title, play/pause button, and skip-forward button. Tapping the body of the Mini Player navigates to the Full Player.
-  - Blocks: Full Player.
-  - Verify: Start playback → Mini Player appears. Navigate between screens → Mini Player persists. Pause/resume from Mini Player works.
-
-- [ ] **3.4 — Full Player screen**
-  - Sessions: 1
-  - What gets built: Full Player screen (expanded from Mini Player tap). Seek bar with elapsed / remaining time. Skip ±30s buttons. Playback speed selector (0.5×, 1×, 1.5×, 2×) wired to `just_audio`. Sleep timer button (countdown that calls `stop` when elapsed). Link that opens Episode Detail show notes.
-  - Blocks: nothing further.
-  - Verify: Open Full Player → seek bar moves in real time → dragging the thumb seeks correctly. Speed selector changes playback rate audibly. Sleep timer fires after the set duration.
-
-- [ ] **3.5 — Playback position persistence**
-  - Sessions: 1
-  - What gets built: Riverpod listener (or `AudioHandler` callback) that writes `listened_position_seconds` to SQLite every ~5 seconds during playback and on pause/stop. On episode load, checks the DB for a saved position and resumes from it. Marks `is_completed = 1` when the episode finishes.
-  - Blocks: background download logic (which targets unlistened episodes).
-  - Verify: Play an episode to a mid-point → close the app fully → reopen → tap the episode → playback resumes from the saved position, not from zero.
+Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 2 (Streaming) is now implemented in code, so the next unfinished work starts with Journey 3 (Queue).
 
 ---
 
@@ -151,3 +136,4 @@ Items are ordered so each session builds on the last and ends with something ver
 ## Blocked / Open Questions
 
 - `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.
+- Phase 3 still needs manual Android verification for real audio playback, lock screen controls, notification shade controls, and background resume behavior on an emulator or physical device.

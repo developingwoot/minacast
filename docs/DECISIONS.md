@@ -168,3 +168,21 @@ _This section is for architectural decisions made after the project has started.
 - **Why:** The app already has the full episode payload available at the tap site, and Session 3.1 only needs presentation plus placeholder actions. Passing the model directly keeps the implementation small, avoids premature state plumbing, and leaves playback integration free to evolve in Session 3.2 if it needs a richer source of truth.
 - **Consequences:** Home and Podcast Detail own navigation into Episode Detail and pass the selected episode through the route constructor. If playback, queue, or progress persistence later require fresh DB reads or reactive updates, we may introduce a provider then rather than carrying that complexity before it is needed.
 - **Revisit if:** Episode Detail needs live-updating playback state, DB-backed mutations, or data that is not already present on the `Episode` model.
+
+## Single App-Wide Playback Controller
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** Minacast uses one app-wide `PodcastAudioHandler` initialized through `AudioService.init()` before `runApp()`, and Riverpod providers bridge its streams into the UI.
+- **Why:** Playback state needs to survive navigation changes, drive both the Mini Player and Full Player, and remain the Android MediaSession source of truth for notification and lock screen controls. A single handler keeps playback, progress, speed, and current media metadata centralized instead of splitting those responsibilities across widgets.
+- **Consequences:** UI screens call a thin playback command surface rather than constructing `just_audio` objects directly. Mini Player, Full Player, and persistence listeners all observe the same shared playback state. Future queue/autoplay work should extend this handler rather than add a parallel playback path.
+- **Revisit if:** Queue playback or background sync requires a more explicit playlist abstraction than the current single-item handler model.
+
+## Sleep Timer Default Aligned to Spec
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** Seed `settings.sleep_timer_default_minutes` as `30` instead of `0`.
+- **Why:** `SPEC.md` defines the default sleep timer duration as 30 minutes, and Phase 3 began reading that value directly from SQLite when opening the Full Player sleep timer flow.
+- **Consequences:** New installs default the sleep timer button to a 30-minute countdown. Tests now assert the seeded value is `30`, and later Settings work should treat that as the baseline default unless the user changes it.
+- **Revisit if:** Product direction changes and the desired default becomes “off” instead of a preselected duration.

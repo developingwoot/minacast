@@ -55,7 +55,7 @@ CREATE TABLE settings (
 const List<Map<String, String>> _defaultSettings = [
   {'key': 'dark_mode', 'value': 'false'},
   {'key': 'playback_speed', 'value': '1.0'},
-  {'key': 'sleep_timer_default_minutes', 'value': '0'},
+  {'key': 'sleep_timer_default_minutes', 'value': '30'},
 ];
 
 class DatabaseHelper {

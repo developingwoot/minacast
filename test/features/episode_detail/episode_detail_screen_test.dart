@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:minacast/data/models/episode.dart';
@@ -19,7 +20,9 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(home: EpisodeDetailScreen(episode: episode)),
+      const ProviderScope(
+        child: MaterialApp(home: EpisodeDetailScreen(episode: episode)),
+      ),
     );
     await tester.pump();
 

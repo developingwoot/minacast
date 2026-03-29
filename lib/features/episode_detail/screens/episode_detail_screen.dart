@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/episode.dart';
+import '../../playback/providers/playback_providers.dart';
+import '../../playback/models/playback_ui_status.dart';
 
-class EpisodeDetailScreen extends StatelessWidget {
+class EpisodeDetailScreen extends ConsumerWidget {
   const EpisodeDetailScreen({super.key, required this.episode});
 
   final Episode episode;
@@ -52,9 +55,14 @@ class EpisodeDetailScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final TextTheme textTheme = Theme.of(context).textTheme;
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Episode? currentEpisode = ref.watch(currentPlaybackEpisodeProvider);
+    final PlaybackUiStatus playbackStatus = ref.watch(playbackStatusProvider);
+    final bool isCurrentEpisode = currentEpisode?.guid == episode.guid;
+    final bool isLoading =
+        isCurrentEpisode && playbackStatus == PlaybackUiStatus.loading;
     final List<String> metadata = <String>[
       if (episode.pubDate > 0) _formatDate(episode.pubDate),
       if (episode.durationSeconds != null)
@@ -83,12 +91,31 @@ class EpisodeDetailScreen extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => _showPlaceholderMessage(
-                      context,
-                      'Playback will be connected in Session 3.2.',
-                    ),
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Play'),
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            try {
+                              await ref
+                                  .read(playbackControllerProvider)
+                                  .playEpisode(episode);
+                            } catch (_) {
+                              if (!context.mounted) {
+                                return;
+                              }
+                              _showPlaceholderMessage(
+                                context,
+                                'We could not start playback right now.',
+                              );
+                            }
+                          },
+                    icon: isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.play_arrow),
+                    label: Text(isCurrentEpisode ? 'Play From Here' : 'Play'),
                   ),
                 ),
                 const SizedBox(width: 12),

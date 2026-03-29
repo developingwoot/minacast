@@ -1,15 +1,72 @@
+import 'dart:async';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'data/database_helper.dart';
 import 'features/home/screens/home_screen.dart';
+import 'features/playback/providers/playback_providers.dart';
+import 'features/playback/services/playback_persistence_coordinator.dart';
+import 'features/playback/services/podcast_audio_handler.dart';
+import 'features/playback/widgets/mini_player.dart';
 import 'features/settings/screens/settings_screen.dart';
 
-void main() {
-  runApp(const ProviderScope(child: MyApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final PodcastAudioHandler audioHandler = await AudioService.init(
+    builder: () => PodcastAudioHandler(databaseHelper: DatabaseHelper.instance),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.example.minacast.playback',
+      androidNotificationChannelName: 'Minacast Playback',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    ),
+  );
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        audioHandlerProvider.overrideWithValue(audioHandler),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  PlaybackPersistenceCoordinator? _coordinator;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _coordinator = ref.read(playbackPersistenceCoordinatorProvider);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final PlaybackPersistenceCoordinator? coordinator = _coordinator;
+    if (coordinator == null) {
+      return;
+    }
+
+    unawaited(coordinator.handleAppLifecycleStateChanged(state));
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,14 +114,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _selectedIndex = 0;
 
   static const List<Widget> _tabs = <Widget>[HomeScreen(), SettingsScreen()];
@@ -77,8 +134,17 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget player = ref.watch(miniPlayerVisibleProvider)
+        ? const MiniPlayer()
+        : const SizedBox.shrink();
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _tabs),
+      body: Column(
+        children: <Widget>[
+          Expanded(child: IndexedStack(index: _selectedIndex, children: _tabs)),
+          player,
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onDestinationSelected,
