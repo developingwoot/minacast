@@ -382,7 +382,95 @@ void main() {
     });
   });
 
-  // ── Group 5: Settings ──────────────────────────────────────────────────────
+  // ── Group 5: getOldestUnlistenedEpisodeWithoutLocalFile ───────────────────
+
+  group('getOldestUnlistenedEpisodeWithoutLocalFile', () {
+    setUp(() async {
+      await DatabaseHelper.instance.insertPodcast(makePodcast());
+    });
+
+    test('returns null when no episodes exist for the podcast', () async {
+      final Episode? result = await DatabaseHelper.instance
+          .getOldestUnlistenedEpisodeWithoutLocalFile(
+            'https://example.com/feed.xml',
+          );
+      expect(result, isNull);
+    });
+
+    test('returns null when all episodes are completed', () async {
+      final Episode e = makeEpisode(guid: 'ep-1', pubDate: 1000);
+      await DatabaseHelper.instance.insertEpisode(e);
+      await DatabaseHelper.instance.markEpisodeCompleted(e.guid);
+
+      final Episode? result = await DatabaseHelper.instance
+          .getOldestUnlistenedEpisodeWithoutLocalFile(
+            'https://example.com/feed.xml',
+          );
+      expect(result, isNull);
+    });
+
+    test('returns null when all incomplete episodes already have local_file_path',
+        () async {
+      final Episode e = makeEpisode(guid: 'ep-1', pubDate: 1000);
+      await DatabaseHelper.instance.insertEpisode(e);
+      await DatabaseHelper.instance.updateLocalFilePath(
+        e.guid,
+        '/data/data/com.example/files/downloads/ep-1.mp3',
+      );
+
+      final Episode? result = await DatabaseHelper.instance
+          .getOldestUnlistenedEpisodeWithoutLocalFile(
+            'https://example.com/feed.xml',
+          );
+      expect(result, isNull);
+    });
+
+    test('returns the episode with the smallest pub_date that is incomplete '
+        'and has no local file', () async {
+      // Insert three episodes with different pub_dates.
+      await DatabaseHelper.instance.insertEpisode(
+        makeEpisode(guid: 'ep-newest', pubDate: 3000),
+      );
+      await DatabaseHelper.instance.insertEpisode(
+        makeEpisode(guid: 'ep-oldest', pubDate: 1000),
+      );
+      await DatabaseHelper.instance.insertEpisode(
+        makeEpisode(guid: 'ep-middle', pubDate: 2000),
+      );
+
+      final Episode? result = await DatabaseHelper.instance
+          .getOldestUnlistenedEpisodeWithoutLocalFile(
+            'https://example.com/feed.xml',
+          );
+      expect(result, isNotNull);
+      expect(result!.guid, equals('ep-oldest'));
+    });
+
+    test('ignores episodes belonging to other podcasts', () async {
+      await DatabaseHelper.instance.insertPodcast(
+        makePodcast(rssUrl: 'https://other.com/feed.xml'),
+      );
+      await DatabaseHelper.instance.insertEpisode(
+        makeEpisode(
+          guid: 'ep-other',
+          podcastRssUrl: 'https://other.com/feed.xml',
+          pubDate: 500,
+        ),
+      );
+      await DatabaseHelper.instance.insertEpisode(
+        makeEpisode(guid: 'ep-mine', pubDate: 2000),
+      );
+
+      final Episode? result = await DatabaseHelper.instance
+          .getOldestUnlistenedEpisodeWithoutLocalFile(
+            'https://example.com/feed.xml',
+          );
+      expect(result, isNotNull);
+      expect(result!.guid, equals('ep-mine'));
+    });
+  });
+
+  // ── Group 6: Settings ──────────────────────────────────────────────────────
 
   group('Settings', () {
     test('getSetting returns null for unknown key', () async {

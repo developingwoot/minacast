@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workmanager/workmanager.dart';
 
+import 'background/background_sync_task.dart';
 import 'data/database_helper.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/playback/providers/playback_providers.dart';
@@ -14,6 +17,39 @@ import 'features/settings/screens/settings_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register the WorkManager periodic sync task. ExistingWorkPolicy.keep means
+  // re-registering on every launch does not reset the 24-hour countdown.
+  await Workmanager().initialize(callbackDispatcher);
+  await Workmanager().registerPeriodicTask(
+    kBackgroundSyncTaskName,
+    kBackgroundSyncTaskName,
+    frequency: const Duration(hours: 24),
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
+
+  // Pre-create the notification channel in the main isolate so it exists
+  // before the background isolate ever tries to send a notification.
+  // Android 8.0+ requires the channel to be created before show() is called.
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  await notificationsPlugin.initialize(
+    settings: const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    ),
+  );
+  await notificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          kNotificationChannelId,
+          kNotificationChannelName,
+          description: 'New episode alerts',
+          importance: Importance.defaultImportance,
+        ),
+      );
 
   final PodcastAudioHandler audioHandler = await AudioService.init(
     builder: () => PodcastAudioHandler(databaseHelper: DatabaseHelper.instance),

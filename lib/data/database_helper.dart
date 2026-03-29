@@ -82,6 +82,7 @@ class DatabaseHelper {
       path,
       version: _dbVersion,
       onConfigure: (Database db) async {
+        await db.execute('PRAGMA journal_mode=WAL');
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (Database db, int version) async {
@@ -320,6 +321,31 @@ class DatabaseHelper {
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('updateLocalFilePath failed: $e');
       rethrow;
+    }
+  }
+
+  /// Returns the oldest incomplete episode for [rssUrl] with no local file downloaded.
+  /// "Oldest" means smallest pub_date — so the user works through a backlog in order.
+  Future<Episode?> getOldestUnlistenedEpisodeWithoutLocalFile(
+    String rssUrl,
+  ) async {
+    try {
+      final Database db = await database;
+      final List<Map<String, Object?>> rows = await db.query(
+        'episodes',
+        where:
+            'podcast_rss_url = ? AND is_completed = 0 AND local_file_path IS NULL',
+        whereArgs: [rssUrl],
+        orderBy: 'pub_date ASC',
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+      return Episode.fromMap(rows.first);
+    } on DatabaseException catch (e) {
+      if (kDebugMode) {
+        debugPrint('getOldestUnlistenedEpisodeWithoutLocalFile failed: $e');
+      }
+      return null;
     }
   }
 

@@ -64,6 +64,20 @@
   - Added explanatory comment to `podcastDetailProvider` noting Riverpod does not export the family provider type for explicit annotation
   - Removed stale "no tests exist" note from AGENTS.md Testing Configuration section
   - Current suite is green: `flutter test` passes with 51 tests and `flutter analyze` passes with no issues
+- [x] **5.1 — WorkManager daily task: RSS sync + new-episode notification**
+  - Added `BackgroundSyncService` plus WorkManager callback registration and periodic daily scheduling on app launch
+  - Background task fetches RSS for all subscribed podcasts, inserts only genuinely new episodes, updates `last_checked_at`, and fires a local notification when new episodes are found
+  - Added `POST_NOTIFICATIONS` and `RECEIVE_BOOT_COMPLETED` manifest permissions and pre-created the Android notification channel at startup
+  - Added automated coverage in `test/background/background_sync_task_test.dart`
+- [x] **5.2 — Silent background download of oldest unlistened episode**
+  - Added WAL mode in SQLite configuration before background-isolate DB access
+  - Added `getOldestUnlistenedEpisodeWithoutLocalFile` to the data layer and background download logic that stores audio under the app support directory, then writes `episodes.local_file_path`
+  - Download flow handles HTTP and filesystem failures safely so playback falls back to streaming when needed
+  - Added database and background sync coverage for selection and download behavior
+- [x] **Phase 5 verification + compatibility fixes**
+  - Updated WorkManager periodic registration to use the current plugin API
+  - Updated `flutter_local_notifications` calls to the current named-parameter API used by the installed package version
+  - Re-ran the full quality gates successfully: `flutter test` passes with 65 tests and `flutter analyze` passes with no issues
 
 ---
 
@@ -76,22 +90,6 @@ _(nothing yet)_
 ## Not Started
 
 Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 2 (Streaming) is now implemented in code, so the next unfinished work starts with Journey 3 (Queue).
-
----
-
-### Phase 5 — Background Sync & Notifications
-
-- [ ] **5.1 — WorkManager daily task: RSS sync + new-episode notification**
-  - Sessions: 1
-  - What gets built: WorkManager task registered on app launch (periodic, ~24 h). Task fetches RSS for all subscribed podcasts, compares guids against the `episodes` table, inserts new rows, updates `last_checked_at`. If any new episodes are found, fires a local notification via `flutter_local_notifications` ("New episodes available").
-  - Blocks: silent download step.
-  - Verify: Trigger the WorkManager task manually (use `workmanager` one-shot for testing) after subscribing to a podcast that has published new content → notification appears in the notification shade.
-
-- [ ] **5.2 — Silent background download of oldest unlistened episode**
-  - Sessions: 1
-  - What gets built: Within the same WorkManager task: check free storage (`> 500 MB`); for each subscription, find the oldest episode where `is_completed = 0` and `local_file_path IS NULL`; download the audio file to the app's files directory; write the local path back to `episodes.local_file_path`. Playback layer already checks `local_file_path` first (from 3.2).
-  - Blocks: nothing further.
-  - Verify: Trigger the task manually with a subscribed podcast that has unlistened episodes and ≥ 500 MB free → inspect the `episodes` table to confirm `local_file_path` is populated → tap that episode → confirm it plays without a network connection (airplane mode test).
 
 ---
 
@@ -133,4 +131,4 @@ Items are ordered so each session builds on the last and ends with something ver
 - `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.
 - Phase 3 / 4 still need manual Android verification for real audio playback, lock screen controls, notification shade controls, background resume behavior, queue reordering, and autoplay on an emulator or physical device.
 - The Minacast SVG logo exists at `assets/images/minacast.svg`, but in-app usage still needs either a PNG export or approval to add an SVG rendering package before we can place it in Flutter UI.
-- **Phase 5 prerequisite:** Add `PRAGMA journal_mode=WAL` to `DatabaseHelper._initDb` before implementing the WorkManager background isolate, to prevent write-lock contention between the main and background isolates. See DECISIONS.md "WAL Mode for SQLite".
+- Phase 5 code is implemented and automated tests are green, but manual Android verification is still pending: trigger the WorkManager task on a device or emulator, confirm the notification appears, and confirm an auto-downloaded episode plays offline.
