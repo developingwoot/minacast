@@ -2,7 +2,7 @@
 
 ## Implemented
 
-_(nothing yet)_
+- [x] **1.1 — Flutter project init + all dependencies declared**
 
 ---
 
@@ -19,12 +19,6 @@ Items are ordered so each session builds on the last and ends with something ver
 ---
 
 ### Phase 1 — Project Scaffold & Data Layer
-
-- [ ] **1.1 — Flutter project init + all dependencies declared**
-  - Sessions: 1
-  - What gets built: `flutter create` for Android-only target; add all packages to `pubspec.yaml` (`sqflite`, `riverpod`, `just_audio`, `audio_service`, `workmanager`, `flutter_local_notifications`, `dart_rss`, `http`, `cached_network_image`, `flutter_html`); confirm the app compiles and launches to a blank screen.
-  - Blocks: everything.
-  - Verify: App launches on emulator/device without errors.
 
 - [ ] **1.2 — SQLite schema + database helper**
   - Sessions: 1
