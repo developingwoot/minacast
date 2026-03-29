@@ -3,6 +3,11 @@
 ## Implemented
 
 - [x] **1.1 — Flutter project init + all dependencies declared**
+- [x] **1.2 — SQLite schema + database helper**
+  - `DatabaseHelper` singleton with all four tables (`podcasts`, `episodes`, `queue`, `settings`), `PRAGMA foreign_keys = ON`, default settings seed, and 20 query methods
+  - Typed model classes: `Podcast`, `Episode`, `QueueEntry`
+  - 23 unit tests passing against in-memory SQLite (`sqflite_common_ffi`)
+  - App logo SVG added at `assets/images/minacast.svg`
 
 ---
 
@@ -136,7 +141,7 @@ Items are ordered so each session builds on the last and ends with something ver
 
 - [ ] **7.1 — App icon, splash screen, app name**
   - Sessions: 1
-  - What gets built: Launcher icon and splash screen assets added via `flutter_launcher_icons` and `flutter_native_splash`. App name set to "Minacast" in `AndroidManifest.xml`.
+  - What gets built: Launcher icon and splash screen assets added via `flutter_launcher_icons` and `flutter_native_splash`. App name set to "Minacast" in `AndroidManifest.xml`. Source logo SVG is already at `assets/images/minacast.svg` — export it to PNG as input for `flutter_launcher_icons`.
   - Blocks: Play Store listing.
   - Verify: Install the APK → launcher shows the correct icon and name → splash screen displays on cold launch.
 

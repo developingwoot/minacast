@@ -147,6 +147,6 @@ _This section is for architectural decisions made after the project has started.
   - Scaffold background: `#111318`
   - Surface: `#1E2028`
   - On-surface text: `#E4E6EF`
-- **Why:** Developer chose dark & minimal as the overall vibe (content-first, similar to Pocket Casts dark mode) and electric blue as the accent. Logo is forthcoming; placeholder icon will be used until it arrives.
-- **Consequences:** ThemeData is set up in `main.dart` using `ColorScheme.dark()` overrides with `useMaterial3: true`. When the logo arrives, the accent may be revisited to match brand colors.
+- **Why:** Developer chose dark & minimal as the overall vibe (content-first, similar to Pocket Casts dark mode) and electric blue as the accent.
+- **Consequences:** ThemeData is set up in `main.dart` using `ColorScheme.dark()` overrides with `useMaterial3: true`. The app logo SVG is at `assets/images/minacast.svg` — the accent color may be revisited during Phase 7 if it conflicts with brand colors in the final logo.
 - **Revisit if:** Final logo introduces a different primary color that conflicts with `#1DB9FF`.
