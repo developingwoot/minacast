@@ -3,8 +3,10 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/episode.dart';
-import '../../playback/providers/playback_providers.dart';
 import '../../playback/models/playback_ui_status.dart';
+import '../../playback/providers/playback_providers.dart';
+import '../../queue/providers/queue_providers.dart';
+import '../../queue/services/queue_service.dart';
 
 class EpisodeDetailScreen extends ConsumerWidget {
   const EpisodeDetailScreen({super.key, required this.episode});
@@ -15,6 +17,40 @@ class EpisodeDetailScreen extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _addToQueue(
+    BuildContext context,
+    WidgetRef ref,
+    Episode episode,
+  ) async {
+    try {
+      final QueueAddResult result = await ref
+          .read(queueProvider.notifier)
+          .addEpisode(episode);
+
+      if (!context.mounted) {
+        return;
+      }
+
+      if (result.addedAny) {
+        _showPlaceholderMessage(context, 'Added to queue.');
+        return;
+      }
+
+      _showPlaceholderMessage(
+        context,
+        'That episode is already in your queue.',
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+      _showPlaceholderMessage(
+        context,
+        'We could not add that episode to the queue right now.',
+      );
+    }
   }
 
   String _formatDuration(int seconds) {
@@ -121,10 +157,7 @@ class EpisodeDetailScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _showPlaceholderMessage(
-                      context,
-                      'Queue actions are planned for Phase 4.',
-                    ),
+                    onPressed: () => _addToQueue(context, ref, episode),
                     icon: const Icon(Icons.queue_music),
                     label: const Text('Add to Queue'),
                   ),

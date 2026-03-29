@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'models/episode.dart';
 import 'models/podcast.dart';
 import 'models/queue_entry.dart';
+import 'models/queued_episode.dart';
 
 const String _dbName = 'minacast.db';
 const int _dbVersion = 1;
@@ -323,6 +324,74 @@ class DatabaseHelper {
     }
   }
 
+  Future<QueueEntry?> getQueueEntryForEpisodeGuid(String episodeGuid) async {
+    try {
+      final Database db = await database;
+      final List<Map<String, Object?>> rows = await db.query(
+        'queue',
+        where: 'episode_guid = ?',
+        whereArgs: [episodeGuid],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return null;
+      }
+      return QueueEntry.fromMap(rows.first);
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('getQueueEntryForEpisodeGuid failed: $e');
+      return null;
+    }
+  }
+
+  Future<QueueEntry?> getNextQueueEntry() async {
+    try {
+      final Database db = await database;
+      final List<Map<String, Object?>> rows = await db.query(
+        'queue',
+        orderBy: 'sort_order ASC',
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return null;
+      }
+      return QueueEntry.fromMap(rows.first);
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('getNextQueueEntry failed: $e');
+      return null;
+    }
+  }
+
+  Future<List<QueuedEpisode>> getQueuedEpisodes() async {
+    try {
+      final Database db = await database;
+      final List<Map<String, Object?>> rows = await db.rawQuery('''
+        SELECT
+          queue.id AS queue_id,
+          queue.sort_order AS queue_sort_order,
+          episodes.guid,
+          episodes.podcast_rss_url,
+          episodes.title,
+          episodes.audio_url,
+          episodes.description_html,
+          episodes.duration_seconds,
+          episodes.pub_date,
+          episodes.listened_position_seconds,
+          episodes.is_completed,
+          episodes.local_file_path,
+          podcasts.title AS podcast_title,
+          podcasts.artwork_url AS podcast_artwork_url
+        FROM queue
+        INNER JOIN episodes ON episodes.guid = queue.episode_guid
+        INNER JOIN podcasts ON podcasts.rss_url = episodes.podcast_rss_url
+        ORDER BY queue.sort_order ASC
+      ''');
+      return rows.map(QueuedEpisode.fromMap).toList();
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('getQueuedEpisodes failed: $e');
+      return [];
+    }
+  }
+
   Future<void> updateQueueOrder(int id, int newSortOrder) async {
     try {
       final Database db = await database;
@@ -354,6 +423,25 @@ class DatabaseHelper {
       await db.delete('queue');
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('clearQueue failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> replaceQueueOrder(List<QueueEntry> entries) async {
+    try {
+      final Database db = await database;
+      await db.transaction((Transaction transaction) async {
+        for (final QueueEntry entry in entries) {
+          await transaction.update(
+            'queue',
+            {'sort_order': entry.sortOrder},
+            where: 'id = ?',
+            whereArgs: [entry.id],
+          );
+        }
+      });
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('replaceQueueOrder failed: $e');
       rethrow;
     }
   }

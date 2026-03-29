@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/episode.dart';
 import '../../episode_detail/screens/episode_detail_screen.dart';
 import '../../podcast_detail/widgets/episode_list_item.dart';
+import '../../queue/screens/queue_screen.dart';
 import '../../search/screens/search_screen.dart';
 import '../providers/feed_provider.dart';
 
@@ -27,6 +28,14 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openQueue(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => const QueueScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Episode>> feedState = ref.watch(feedProvider);
@@ -35,6 +44,11 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Minacast'),
         actions: <Widget>[
+          IconButton(
+            tooltip: 'Open queue',
+            onPressed: () => _openQueue(context),
+            icon: const Icon(Icons.queue_music_outlined),
+          ),
           IconButton(
             tooltip: 'Search podcasts',
             onPressed: () => _openSearch(context),

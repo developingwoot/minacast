@@ -11,13 +11,19 @@ import '../models/playback_ui_status.dart';
 import '../models/sleep_timer_state.dart';
 import 'playback_controller.dart';
 import 'playback_media_mapper.dart';
+import 'queue_autoplay_service.dart';
 
 class PodcastAudioHandler extends BaseAudioHandler
     with SeekHandler
     implements PlaybackController {
-  PodcastAudioHandler({required DatabaseHelper databaseHelper})
-    : _databaseHelper = databaseHelper,
-      _player = AudioPlayer() {
+  PodcastAudioHandler({
+    required DatabaseHelper databaseHelper,
+    QueueAutoplayService? queueAutoplayService,
+  }) : _databaseHelper = databaseHelper,
+       _queueAutoplayService =
+           queueAutoplayService ??
+           QueueAutoplayService(databaseHelper: databaseHelper),
+       _player = AudioPlayer() {
     _listenToPlayer();
     _emitEpisode(_currentEpisode);
     _emitMediaItem(_currentMediaItem);
@@ -28,6 +34,7 @@ class PodcastAudioHandler extends BaseAudioHandler
   }
 
   final DatabaseHelper _databaseHelper;
+  final QueueAutoplayService _queueAutoplayService;
   final AudioPlayer _player;
 
   final StreamController<Episode?> _episodeController =
@@ -189,7 +196,9 @@ class PodcastAudioHandler extends BaseAudioHandler
       await cancelSleepTimer();
       _emitStatus(PlaybackUiStatus.loading);
 
-      final Podcast? podcast = await _loadPodcastMetadata(episode.podcastRssUrl);
+      final Podcast? podcast = await _loadPodcastMetadata(
+        episode.podcastRssUrl,
+      );
       final MediaItem nextMediaItem = mediaItemFromEpisode(
         episode,
         podcast: podcast,
@@ -205,7 +214,10 @@ class PodcastAudioHandler extends BaseAudioHandler
       _emitMediaItem(nextMediaItem);
 
       await _player.setSpeed(savedSpeed);
-      await _player.setAudioSource(audioSource, initialPosition: resumePosition);
+      await _player.setAudioSource(
+        audioSource,
+        initialPosition: resumePosition,
+      );
       _currentProgress = PlaybackProgress(
         position: resumePosition,
         duration: _player.duration ?? Duration.zero,
@@ -317,9 +329,7 @@ class PodcastAudioHandler extends BaseAudioHandler
     }
 
     _sleepTimerEndsAt = DateTime.now().add(duration);
-    _emitSleepTimerState(
-      SleepTimerState(isActive: true, remaining: duration),
-    );
+    _emitSleepTimerState(SleepTimerState(isActive: true, remaining: duration));
 
     _sleepTimer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       final DateTime? endsAt = _sleepTimerEndsAt;
@@ -351,8 +361,12 @@ class PodcastAudioHandler extends BaseAudioHandler
   Future<void> _handlePlaybackCompleted() async {
     final Episode? completedEpisode = _currentEpisode;
     if (completedEpisode != null) {
-      await _databaseHelper.markEpisodeCompleted(completedEpisode.guid);
-      await _databaseHelper.updateListenedPosition(completedEpisode.guid, 0);
+      final Episode? nextEpisode = await _queueAutoplayService
+          .completeEpisodeAndLoadNext(completedEpisode);
+      if (nextEpisode != null) {
+        await playEpisode(nextEpisode);
+        return;
+      }
     }
 
     _emitStatus(PlaybackUiStatus.completed);

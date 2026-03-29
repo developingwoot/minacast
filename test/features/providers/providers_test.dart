@@ -10,6 +10,7 @@ import 'package:minacast/data/models/podcast.dart';
 import 'package:minacast/features/home/providers/feed_provider.dart';
 import 'package:minacast/features/podcast_detail/providers/podcast_detail_provider.dart';
 import 'package:minacast/features/podcast_detail/services/rss_feed_service.dart';
+import 'package:minacast/features/queue/providers/queue_providers.dart';
 import 'package:minacast/features/search/providers/search_provider.dart';
 import 'package:minacast/features/search/services/podcast_search_service.dart';
 
@@ -157,5 +158,38 @@ void main() {
     expect(episodes, hasLength(2));
     expect(episodes.first.guid, 'newer');
     expect(episodes.last.guid, 'older');
+  });
+
+  test('queueProvider returns queued episodes with podcast metadata', () async {
+    await DatabaseHelper.instance.insertPodcast(
+      const Podcast(
+        rssUrl: 'https://example.com/feed.xml',
+        title: 'Example',
+        author: 'Host',
+        description: 'Desc',
+        artworkUrl: 'https://example.com/art.jpg',
+        lastCheckedAt: 1,
+      ),
+    );
+    await DatabaseHelper.instance.insertEpisode(
+      const Episode(
+        guid: 'queued',
+        podcastRssUrl: 'https://example.com/feed.xml',
+        title: 'Queued Episode',
+        audioUrl: 'https://example.com/queued.mp3',
+        descriptionHtml: '<p>queued</p>',
+        pubDate: 100,
+      ),
+    );
+    await DatabaseHelper.instance.enqueue('queued', 0);
+
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final queuedEpisodes = await container.read(queueProvider.future);
+
+    expect(queuedEpisodes, hasLength(1));
+    expect(queuedEpisodes.first.episode.guid, 'queued');
+    expect(queuedEpisodes.first.podcastTitle, 'Example');
   });
 }

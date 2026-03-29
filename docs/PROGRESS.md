@@ -43,11 +43,21 @@
 - [x] **3.5 — Playback position persistence**
   - Added a playback persistence coordinator that writes listened position to SQLite roughly every 5 seconds during playback and flushes on pause/background
   - Episode playback resumes from saved position for unfinished episodes and marks episodes complete while clearing saved progress at end of playback
+- [x] **4.1 — Queue data layer + Add to Queue**
+  - Added queue-specific service/provider plumbing on top of SQLite so Episode Detail can append episodes at the end of the queue with stable `sort_order`
+  - Duplicate queue inserts are skipped, and multi-episode queue additions sort oldest-to-newest before insertion
+  - Added queue service and provider coverage in `test/features/queue/queue_service_test.dart` and `test/features/providers/providers_test.dart`
+- [x] **4.2 — Queue screen (list, drag-to-reorder, swipe-to-remove)**
+  - Added a dedicated Queue screen accessible from the Home app bar
+  - Queue rows render joined episode + podcast metadata, support drag-to-reorder with persisted `sort_order`, and swipe-to-remove with order normalization
+- [x] **4.3 — Autoplay through the queue**
+  - Added a queue autoplay service that marks finished episodes complete, removes them from `queue`, and starts the next queued episode automatically when available
+  - Added autoplay coverage in `test/features/playback/queue_autoplay_service_test.dart`
 - [x] **Foundational data helpers completed ahead of later UI phases**
   - Queue CRUD exists in `DatabaseHelper` (`enqueue`, `getQueue`, `updateQueueOrder`, `removeFromQueue`, `clearQueue`)
   - Settings persistence exists in `DatabaseHelper` via `getSetting` / `setSetting`
   - Episode progress helpers exist in `DatabaseHelper` for listened position, completion state, and local file path updates
-  - Current suite is green: `flutter test` passes with 42 tests and `flutter analyze` passes with no issues
+  - Current suite is green: `flutter test` passes with 48 tests and `flutter analyze` passes with no issues
 
 ---
 
@@ -60,28 +70,6 @@ _(nothing yet)_
 ## Not Started
 
 Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 2 (Streaming) is now implemented in code, so the next unfinished work starts with Journey 3 (Queue).
-
----
-
-### Phase 4 — Journey 3: Queue
-
-- [ ] **4.1 — Queue data layer + Add to Queue**
-  - Sessions: 1
-  - What gets built: DAO methods for inserting, reordering, and removing rows from the `queue` table. `Add to Queue` button on Episode Detail is wired up; inserts the episode at the end of the queue with correct `sort_order`. When adding multiple episodes from a single podcast, they are sorted oldest-to-newest before insertion.
-  - Blocks: Queue screen, autoplay.
-  - Verify: Tap `Add to Queue` on several episodes → query the `queue` table and confirm rows appear in correct order.
-
-- [ ] **4.2 — Queue screen (list, drag-to-reorder, swipe-to-remove)**
-  - Sessions: 1
-  - What gets built: Queue screen accessible from a Queue icon in the app bar or nav. Renders queued episodes using `ReorderableListView`. Drag handle allows reordering (updates `sort_order` in DB). Swipe-to-dismiss removes the row. Riverpod provider watches the queue table.
-  - Blocks: autoplay.
-  - Verify: Add episodes to queue → open Queue screen → drag to reorder → swipe to remove → DB reflects changes in real time.
-
-- [ ] **4.3 — Autoplay through the queue**
-  - Sessions: 1
-  - What gets built: `AudioHandler` listens for `processingState == completed` and automatically loads and plays the next episode from the queue, then removes the finished episode from the `queue` table. If the queue is empty, playback stops.
-  - Blocks: nothing further.
-  - Verify: Queue two episodes → play the first → let it finish → second episode begins automatically without user interaction. Queue screen shows the first episode removed.
 
 ---
 
@@ -136,4 +124,5 @@ Items are ordered so each session builds on the last and ends with something ver
 ## Blocked / Open Questions
 
 - `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.
-- Phase 3 still needs manual Android verification for real audio playback, lock screen controls, notification shade controls, and background resume behavior on an emulator or physical device.
+- Phase 3 / 4 still need manual Android verification for real audio playback, lock screen controls, notification shade controls, background resume behavior, queue reordering, and autoplay on an emulator or physical device.
+- The Minacast SVG logo exists at `assets/images/minacast.svg`, but in-app usage still needs either a PNG export or approval to add an SVG rendering package before we can place it in Flutter UI.

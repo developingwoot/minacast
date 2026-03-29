@@ -186,3 +186,12 @@ _This section is for architectural decisions made after the project has started.
 - **Why:** `SPEC.md` defines the default sleep timer duration as 30 minutes, and Phase 3 began reading that value directly from SQLite when opening the Full Player sleep timer flow.
 - **Consequences:** New installs default the sleep timer button to a 30-minute countdown. Tests now assert the seeded value is `30`, and later Settings work should treat that as the baseline default unless the user changes it.
 - **Revisit if:** Product direction changes and the desired default becomes “off” instead of a preselected duration.
+
+## Android Entry Activity Uses `AudioServiceActivity`
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** `MainActivity` extends `com.ryanheise.audioservice.AudioServiceActivity` instead of plain `FlutterActivity`.
+- **Why:** The app initializes `audio_service` at startup, and the default `FlutterActivity` did not provide the cached Flutter engine integration that `audio_service` expects. On-device startup failed with `The Activity class declared in your AndroidManifest.xml is wrong` until the activity class matched the plugin contract.
+- **Consequences:** Android startup now aligns with the `audio_service` integration guide, and `AudioService.init()` can complete without the manifest/activity mismatch crash seen during Phase 3 verification. Future Android activity customization should preserve the `AudioServiceActivity` behavior or explicitly reimplement its engine-provision methods.
+- **Revisit if:** We later need a `FlutterFragmentActivity` subclass for another plugin, in which case we should move to `AudioServiceFragmentActivity` or an equivalent custom activity that still provides the correct engine hooks.
