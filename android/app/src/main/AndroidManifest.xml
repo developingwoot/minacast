@@ -7,9 +7,12 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:label="minacast"
+        android:label="Minacast"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:usesCleartextTraffic="false">
         <service
             android:name="com.ryanheise.audioservice.AudioService"
             android:exported="true"

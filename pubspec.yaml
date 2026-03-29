@@ -58,6 +58,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   sqflite_common_ffi: ^2.3.4
+  image: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -80,6 +84,20 @@ flutter:
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/minacast.png"
+  remove_alpha: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/minacast.png"
+
+flutter_native_splash:
+  color: "#1A1A1A"
+  image: assets/images/minacast.png
+  android: true
+  ios: true
+  web: false
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

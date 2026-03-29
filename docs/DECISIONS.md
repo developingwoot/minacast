@@ -243,3 +243,27 @@ _This section is for architectural decisions made after the project has started.
 - **Alternatives considered:** Separate async providers for each setting were possible, but would duplicate SQLite access patterns and spread fallback/default parsing logic across multiple files.
 - **Consequences:** Theme switching is now driven from app state instead of hard-coded theme constants in `main.dart`, and the Settings screen can update all preferences through a consistent API. Future settings should default to extending this controller unless they have a clear reason to live elsewhere.
 - **Revisit if:** The settings surface grows enough that independent refresh lifecycles or feature-scoped settings modules become meaningfully easier to maintain.
+
+---
+
+## applicationId set to `com.developingwoot.minacast`
+
+- **Date:** 2026-03-29
+- **Status:** Active (permanent — cannot change after Play Store submission)
+- **Decision:** Android `applicationId` (and Gradle `namespace`) set to `com.developingwoot.minacast`.
+- **Why:** Google Play rejects apps with `com.example.*` application IDs. The chosen ID uses the developer's brand namespace (`developingwoot`) which matches other published projects.
+- **Alternatives considered:** `io.minacast.app`, `com.minacast.app` — rejected in favour of the developer's existing brand namespace.
+- **Consequences:** This ID is permanent. Changing it after Play Store submission creates a new app listing and cannot migrate existing installs. Any future deeplinks, Firebase config, or OAuth credentials must reference `com.developingwoot.minacast`.
+- **Revisit if:** Never — treat as frozen once the app is live on the Play Store.
+
+---
+
+## SVG → PNG conversion via `cairosvg`
+
+- **Date:** 2026-03-29
+- **Status:** Active (one-time conversion, artefact committed)
+- **Decision:** `assets/images/minacast.png` is generated from `minacast.svg` at 1024×1024 RGBA using the Python `cairosvg` library, not committed as a hand-crafted file or produced via an SVG rendering Flutter package.
+- **Why:** `flutter_launcher_icons` and `flutter_native_splash` both require a raster PNG input. The existing PNG was a 1×1 placeholder. `cairosvg` was the fastest available tool in the WSL2 environment. The generated PNG only needs to be regenerated if the SVG logo changes.
+- **Alternatives considered:** Inkscape, ImageMagick (not installed); adding an SVG Flutter package to the runtime app (unnecessary complexity for a one-time build step).
+- **Consequences:** If the SVG logo ever changes, re-run `cairosvg` to regenerate the PNG, then re-run `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+- **Revisit if:** Logo redesign is needed.

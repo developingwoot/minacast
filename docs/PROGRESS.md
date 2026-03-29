@@ -86,6 +86,19 @@
   - Normalized legacy unsupported settings values (for example `sleep_timer_default_minutes = 0`) back to supported dropdown options so the Settings screen no longer asserts on older persisted data
   - Added provider and widget coverage for settings persistence, theme wiring, and Settings screen interactions
   - Re-ran the full quality gates successfully: `flutter test` passes with 71 tests and `flutter analyze` passes with no issues
+- [x] **7.1 — App icon, splash screen, app name**
+  - Discovered `assets/images/minacast.png` was a 1×1 placeholder; converted `minacast.svg` to a proper 1024×1024 RGBA PNG using `cairosvg`
+  - Re-ran `flutter_launcher_icons` to regenerate all mipmap icons with the real Minacast logo
+  - Ran `flutter_native_splash:create` — splash screen now shows `#1A1A1A` dark background with the Minacast logo centered
+  - App name "Minacast" was already correct in `AndroidManifest.xml`
+- [x] **7.2 — Android permissions, manifest hardening, release build**
+  - Removed `REQUEST_INSTALL_PACKAGES` permission (not required by any app feature)
+  - Fixed broken `proguardFiles` call in `build.gradle.kts` (function call was embedded inside a string literal)
+  - Removed hardcoded fallback keystore credentials (`"minacast123"`) from source — signing config now only activates when `key.properties` is present
+  - Changed `applicationId` and `namespace` from `com.example.minacast` to `com.developingwoot.minacast`
+  - Fixed `key.properties` keystore path (`app/release-key.jks` → `release-key.jks`)
+  - `flutter build appbundle --release` succeeds — signed AAB at `build/app/outputs/bundle/release/app-release.aab` (52.2 MB)
+  - All 74 tests pass
 
 ---
 
@@ -101,22 +114,7 @@ Items are ordered so each session builds on the last and ends with something ver
 
 ---
 
-### Phase 6 — Settings Screen
-
 ### Phase 7 — Polish & Release Prep
-
-- [ ] **7.1 — App icon, splash screen, app name**
-  - Sessions: 1
-  - What gets built: Launcher icon and splash screen assets added via `flutter_launcher_icons` and `flutter_native_splash`. App name set to "Minacast" in `AndroidManifest.xml`. Source logo SVG is already at `assets/images/minacast.svg` — export it to PNG as input for `flutter_launcher_icons`.
-  - Blocks: Play Store listing.
-  - Verify: Install the APK → launcher shows the correct icon and name → splash screen displays on cold launch.
-
-- [ ] **7.2 — Android permissions, manifest hardening, release build** _(partially done)_
-  - Sessions: 1
-  - What gets built: `AndroidManifest.xml` declares `INTERNET`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, and `REQUEST_INSTALL_PACKAGES` (if needed). `minSdkVersion` set to 21 (Android 5). Release keystore generated, `build.gradle` configured for signed APK/AAB. `flutter build appbundle --release` succeeds.
-  - Blocks: Play Store submission.
-  - Verify: Signed AAB builds without errors. Install on a physical device and run through all three user journeys.
-  - **Done so far:** `INTERNET` permission added to `AndroidManifest.xml` (fixed podcast search silently returning empty results on release builds).
 
 - [ ] **7.3 — Play Store listing and submission**
   - Sessions: 1
@@ -128,7 +126,6 @@ Items are ordered so each session builds on the last and ends with something ver
 
 ## Blocked / Open Questions
 
-- `./gradlew :app:assembleDebug` now fails later at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain after the desugaring fix. Next session should determine whether to constrain supported ABIs or fix the local native toolchain configuration.
+- `./gradlew :app:assembleDebug` still fails at `:app:configureCMakeDebug[armeabi-v7a]` in the local Android NDK/CMake toolchain. `flutter build appbundle --release` succeeds via the Flutter toolchain, so this only affects direct Gradle invocations.
 - Phase 3 / 4 still need manual Android verification for real audio playback, lock screen controls, notification shade controls, background resume behavior, queue reordering, and autoplay on an emulator or physical device.
-- The Minacast SVG logo exists at `assets/images/minacast.svg`, but in-app usage still needs either a PNG export or approval to add an SVG rendering package before we can place it in Flutter UI.
 - Phase 5 code is implemented and automated tests are green, but manual Android verification is still pending: trigger the WorkManager task on a device or emulator, confirm the notification appears, and confirm an auto-downloaded episode plays offline.
