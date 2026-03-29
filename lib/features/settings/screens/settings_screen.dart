@@ -52,13 +52,17 @@ class _SettingsContent extends ConsumerWidget {
 
   final AppSettings settings;
 
-  static const List<double> _speedOptions = <double>[0.5, 1.0, 1.5, 2.0];
-  static const List<int> _sleepTimerOptions = <int>[15, 30, 45, 60];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppSettingsNotifier notifier = ref.read(appSettingsProvider.notifier);
     final bool isUpdating = ref.watch(appSettingsProvider).isLoading;
+    final double selectedPlaybackSpeed = AppSettings.normalizePlaybackSpeed(
+      settings.playbackSpeed,
+    );
+    final int selectedSleepTimerDefault =
+        AppSettings.normalizeSleepTimerDefaultMinutes(
+          settings.sleepTimerDefaultMinutes,
+        );
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -81,7 +85,7 @@ class _SettingsContent extends ConsumerWidget {
             title: const Text('Default playback speed'),
             subtitle: const Text('Used for new episodes when playback starts.'),
             trailing: DropdownButton<double>(
-              value: settings.playbackSpeed,
+              value: selectedPlaybackSpeed,
               onChanged: isUpdating
                   ? null
                   : (double? value) async {
@@ -91,7 +95,7 @@ class _SettingsContent extends ConsumerWidget {
 
                       await notifier.updatePlaybackSpeed(value);
                     },
-              items: _speedOptions.map((double option) {
+              items: AppSettings.supportedPlaybackSpeeds.map((double option) {
                 return DropdownMenuItem<double>(
                   value: option,
                   child: Text('${option.toStringAsFixed(1)}x'),
@@ -106,7 +110,7 @@ class _SettingsContent extends ConsumerWidget {
             title: const Text('Sleep timer default'),
             subtitle: const Text('Preselected when you start the sleep timer.'),
             trailing: DropdownButton<int>(
-              value: settings.sleepTimerDefaultMinutes,
+              value: selectedSleepTimerDefault,
               onChanged: isUpdating
                   ? null
                   : (int? value) async {
@@ -116,7 +120,7 @@ class _SettingsContent extends ConsumerWidget {
 
                       await notifier.updateSleepTimerDefaultMinutes(value);
                     },
-              items: _sleepTimerOptions.map((int option) {
+              items: AppSettings.supportedSleepTimerMinutes.map((int option) {
                 return DropdownMenuItem<int>(
                   value: option,
                   child: Text('$option min'),

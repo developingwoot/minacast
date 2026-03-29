@@ -24,12 +24,14 @@ class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
 
       return AppSettings(
         darkMode: rawDarkMode == 'true',
-        playbackSpeed:
-            double.tryParse(rawPlaybackSpeed ?? '1.0') ??
-            AppSettings.defaults.playbackSpeed,
-        sleepTimerDefaultMinutes:
-            int.tryParse(rawSleepTimerDefault ?? '30') ??
-            AppSettings.defaults.sleepTimerDefaultMinutes,
+        playbackSpeed: AppSettings.normalizePlaybackSpeed(
+          double.tryParse(rawPlaybackSpeed ?? '1.0') ??
+              AppSettings.defaults.playbackSpeed,
+        ),
+        sleepTimerDefaultMinutes: AppSettings.normalizeSleepTimerDefaultMinutes(
+          int.tryParse(rawSleepTimerDefault ?? '30') ??
+              AppSettings.defaults.sleepTimerDefaultMinutes,
+        ),
       );
     } catch (error, stackTrace) {
       Error.throwWithStackTrace(error, stackTrace);

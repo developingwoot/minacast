@@ -206,6 +206,19 @@ void main() {
     expect(settings.sleepTimerDefaultMinutes, 30);
   });
 
+  test('appSettingsProvider normalizes legacy unsupported settings values', () async {
+    await DatabaseHelper.instance.setSetting('playback_speed', '3.0');
+    await DatabaseHelper.instance.setSetting('sleep_timer_default_minutes', '0');
+
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final AppSettings settings = await container.read(appSettingsProvider.future);
+
+    expect(settings.playbackSpeed, 1.0);
+    expect(settings.sleepTimerDefaultMinutes, 30);
+  });
+
   test('appSettingsProvider persists setting updates', () async {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);

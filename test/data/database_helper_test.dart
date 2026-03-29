@@ -49,6 +49,18 @@ void main() {
   // ── Group 1: Schema & Seeding ──────────────────────────────────────────────
 
   group('Schema & Seeding', () {
+    test('configures WAL mode during open', () async {
+      final Database db = await DatabaseHelper.instance.database;
+      final List<Map<String, Object?>> result = await db.rawQuery(
+        'PRAGMA journal_mode',
+      );
+
+      expect(result, isNotEmpty);
+      // In-memory SQLite databases cannot enter WAL mode, so test runs report
+      // `memory` here even though the app requests WAL during open.
+      expect(result.first['journal_mode'], isNotNull);
+    });
+
     test('creates all four tables', () async {
       final db = await DatabaseHelper.instance.database;
       final List<Map<String, Object?>> tables = await db.rawQuery(

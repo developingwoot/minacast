@@ -87,4 +87,23 @@ void main() {
 
     expect(find.text('60 min'), findsWidgets);
   });
+
+  testWidgets('settings screen falls back when legacy values are unsupported', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        const AppSettings(
+          darkMode: false,
+          playbackSpeed: 3.0,
+          sleepTimerDefaultMinutes: 0,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('1.0x'), findsOneWidget);
+    expect(find.text('30 min'), findsOneWidget);
+  });
 }

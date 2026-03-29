@@ -82,7 +82,8 @@ class DatabaseHelper {
       path,
       version: _dbVersion,
       onConfigure: (Database db) async {
-        await db.execute('PRAGMA journal_mode=WAL');
+        // journal_mode returns the selected mode, so sqflite requires rawQuery.
+        await db.rawQuery('PRAGMA journal_mode=WAL');
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (Database db, int version) async {

@@ -82,6 +82,8 @@
   - Added a typed app-settings model plus Riverpod-backed settings controller that loads and persists `dark_mode`, `playback_speed`, and `sleep_timer_default_minutes` from SQLite
   - Replaced the Settings placeholder with real controls for dark mode, default playback speed, and default sleep timer duration, including loading/error handling
   - Wired `MaterialApp` theme switching through the persisted dark mode setting and updated the Full Player sleep timer button to show the saved default duration
+  - Fixed the SQLite open-time PRAGMA call so `journal_mode=WAL` uses `rawQuery`, resolving the Android settings crash seen while opening the database
+  - Normalized legacy unsupported settings values (for example `sleep_timer_default_minutes = 0`) back to supported dropdown options so the Settings screen no longer asserts on older persisted data
   - Added provider and widget coverage for settings persistence, theme wiring, and Settings screen interactions
   - Re-ran the full quality gates successfully: `flutter test` passes with 71 tests and `flutter analyze` passes with no issues
 
