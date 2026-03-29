@@ -113,11 +113,12 @@ Items are ordered so each session builds on the last and ends with something ver
   - Blocks: Play Store listing.
   - Verify: Install the APK → launcher shows the correct icon and name → splash screen displays on cold launch.
 
-- [ ] **7.2 — Android permissions, manifest hardening, release build**
+- [ ] **7.2 — Android permissions, manifest hardening, release build** _(partially done)_
   - Sessions: 1
   - What gets built: `AndroidManifest.xml` declares `INTERNET`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, and `REQUEST_INSTALL_PACKAGES` (if needed). `minSdkVersion` set to 21 (Android 5). Release keystore generated, `build.gradle` configured for signed APK/AAB. `flutter build appbundle --release` succeeds.
   - Blocks: Play Store submission.
   - Verify: Signed AAB builds without errors. Install on a physical device and run through all three user journeys.
+  - **Done so far:** `INTERNET` permission added to `AndroidManifest.xml` (fixed podcast search silently returning empty results on release builds).
 
 - [ ] **7.3 — Play Store listing and submission**
   - Sessions: 1
