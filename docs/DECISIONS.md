@@ -138,4 +138,15 @@
 
 _This section is for architectural decisions made after the project has started. Each decision should follow the same format above. New entries are appended here during the end-of-session process whenever a meaningful technical choice is made during a working session._
 
-_(empty to start)_
+## App Color Scheme
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** Dark & minimal theme with electric blue accent.
+  - Accent / primary: `#1DB9FF`
+  - Scaffold background: `#111318`
+  - Surface: `#1E2028`
+  - On-surface text: `#E4E6EF`
+- **Why:** Developer chose dark & minimal as the overall vibe (content-first, similar to Pocket Casts dark mode) and electric blue as the accent. Logo is forthcoming; placeholder icon will be used until it arrives.
+- **Consequences:** ThemeData is set up in `main.dart` using `ColorScheme.dark()` overrides with `useMaterial3: true`. When the logo arrives, the accent may be revisited to match brand colors.
+- **Revisit if:** Final logo introduces a different primary color that conflicts with `#1DB9FF`.
