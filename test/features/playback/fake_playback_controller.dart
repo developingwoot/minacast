@@ -38,6 +38,7 @@ class FakePlaybackController implements PlaybackController {
   int startSleepTimerCalls = 0;
   int cancelSleepTimerCalls = 0;
   int stopPlaybackCalls = 0;
+  int sleepTimerDefaultMinutes = 30;
 
   Duration? lastSeekPosition;
   double? lastSetSpeed;
@@ -117,7 +118,7 @@ class FakePlaybackController implements PlaybackController {
   }
 
   @override
-  Future<int> loadSleepTimerDefaultMinutes() async => 30;
+  Future<int> loadSleepTimerDefaultMinutes() async => sleepTimerDefaultMinutes;
 
   @override
   Future<void> playEpisode(Episode episode) async {

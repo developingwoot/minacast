@@ -9,14 +9,22 @@ import 'package:minacast/features/playback/models/playback_ui_status.dart';
 import 'package:minacast/features/playback/providers/playback_providers.dart';
 import 'package:minacast/features/playback/screens/full_player_screen.dart';
 import 'package:minacast/features/playback/widgets/mini_player.dart';
+import 'package:minacast/features/settings/providers/settings_providers.dart';
 
 import 'fake_playback_controller.dart';
 
 void main() {
-  Widget buildTestApp(FakePlaybackController fakeController, Widget child) {
+  Widget buildTestApp(
+    FakePlaybackController fakeController,
+    Widget child, {
+    int sleepTimerDefaultMinutes = 30,
+  }) {
     return ProviderScope(
       overrides: [
         audioHandlerProvider.overrideWithValue(fakeController),
+        sleepTimerDefaultMinutesProvider.overrideWith(
+          (Ref ref) => sleepTimerDefaultMinutes,
+        ),
       ],
       child: MaterialApp(home: child),
     );
@@ -36,7 +44,9 @@ void main() {
 
   setUp(() {});
 
-  testWidgets('mini player opens full player screen', (WidgetTester tester) async {
+  testWidgets('mini player opens full player screen', (
+    WidgetTester tester,
+  ) async {
     final FakePlaybackController fakeController = FakePlaybackController();
     final Episode episode = buildEpisode();
     fakeController.emitEpisode(episode);
@@ -48,10 +58,7 @@ void main() {
     addTearDown(fakeController.dispose);
 
     await tester.pumpWidget(
-      buildTestApp(
-        fakeController,
-        const Scaffold(body: MiniPlayer()),
-      ),
+      buildTestApp(fakeController, const Scaffold(body: MiniPlayer())),
     );
     await tester.pumpAndSettle();
 
@@ -87,7 +94,11 @@ void main() {
     addTearDown(fakeController.dispose);
 
     await tester.pumpWidget(
-      buildTestApp(fakeController, const FullPlayerScreen()),
+      buildTestApp(
+        fakeController,
+        const FullPlayerScreen(),
+        sleepTimerDefaultMinutes: 45,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -99,5 +110,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(fakeController.skipForwardCalls, 1);
 
+    await tester.scrollUntilVisible(
+      find.text('Start Sleep Timer (45 min)'),
+      250,
+      scrollable: find.byType(Scrollable),
+    );
+    expect(find.text('Start Sleep Timer (45 min)'), findsOneWidget);
   });
 }

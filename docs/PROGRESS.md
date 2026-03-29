@@ -78,6 +78,12 @@
   - Updated WorkManager periodic registration to use the current plugin API
   - Updated `flutter_local_notifications` calls to the current named-parameter API used by the installed package version
   - Re-ran the full quality gates successfully: `flutter test` passes with 65 tests and `flutter analyze` passes with no issues
+- [x] **6.1 — Settings screen: dark mode, playback speed, sleep timer default**
+  - Added a typed app-settings model plus Riverpod-backed settings controller that loads and persists `dark_mode`, `playback_speed`, and `sleep_timer_default_minutes` from SQLite
+  - Replaced the Settings placeholder with real controls for dark mode, default playback speed, and default sleep timer duration, including loading/error handling
+  - Wired `MaterialApp` theme switching through the persisted dark mode setting and updated the Full Player sleep timer button to show the saved default duration
+  - Added provider and widget coverage for settings persistence, theme wiring, and Settings screen interactions
+  - Re-ran the full quality gates successfully: `flutter test` passes with 71 tests and `flutter analyze` passes with no issues
 
 ---
 
@@ -94,14 +100,6 @@ Items are ordered so each session builds on the last and ends with something ver
 ---
 
 ### Phase 6 — Settings Screen
-
-- [ ] **6.1 — Settings screen: dark mode, playback speed, sleep timer default**
-  - Sessions: 1
-  - What gets built: Settings screen with a dark mode toggle (reads/writes `dark_mode` from the `settings` table and rebuilds the `MaterialApp` theme), a default playback speed selector, and a sleep timer default duration selector. Riverpod providers for each setting consumed app-wide.
-  - Blocks: nothing — polish only.
-  - Verify: Toggle dark mode → entire app switches theme instantly. Change default playback speed → open Full Player on a new episode → speed selector pre-selects the saved value. Change sleep timer default → open Full Player → timer button shows the saved duration.
-
----
 
 ### Phase 7 — Polish & Release Prep
 

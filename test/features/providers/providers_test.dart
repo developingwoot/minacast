@@ -13,6 +13,8 @@ import 'package:minacast/features/podcast_detail/services/rss_feed_service.dart'
 import 'package:minacast/features/queue/providers/queue_providers.dart';
 import 'package:minacast/features/search/providers/search_provider.dart';
 import 'package:minacast/features/search/services/podcast_search_service.dart';
+import 'package:minacast/features/settings/models/app_settings.dart';
+import 'package:minacast/features/settings/providers/settings_providers.dart';
 
 void main() {
   setUpAll(() {
@@ -191,5 +193,46 @@ void main() {
     expect(queuedEpisodes, hasLength(1));
     expect(queuedEpisodes.first.episode.guid, 'queued');
     expect(queuedEpisodes.first.podcastTitle, 'Example');
+  });
+
+  test('appSettingsProvider loads seeded defaults from sqlite', () async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final settings = await container.read(appSettingsProvider.future);
+
+    expect(settings.darkMode, isFalse);
+    expect(settings.playbackSpeed, 1.0);
+    expect(settings.sleepTimerDefaultMinutes, 30);
+  });
+
+  test('appSettingsProvider persists setting updates', () async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    await container.read(appSettingsProvider.future);
+    await container.read(appSettingsProvider.notifier).updateDarkMode(true);
+    await container.read(appSettingsProvider.notifier).updatePlaybackSpeed(1.5);
+    await container
+        .read(appSettingsProvider.notifier)
+        .updateSleepTimerDefaultMinutes(45);
+
+    final AsyncValue<AppSettings> settingsState = container.read(
+      appSettingsProvider,
+    );
+    final AppSettings? settings = settingsState is AsyncData<AppSettings>
+        ? settingsState.value
+        : null;
+
+    expect(settings, isNotNull);
+    expect(settings!.darkMode, isTrue);
+    expect(settings.playbackSpeed, 1.5);
+    expect(settings.sleepTimerDefaultMinutes, 45);
+    expect(await DatabaseHelper.instance.getSetting('dark_mode'), 'true');
+    expect(await DatabaseHelper.instance.getSetting('playback_speed'), '1.5');
+    expect(
+      await DatabaseHelper.instance.getSetting('sleep_timer_default_minutes'),
+      '45',
+    );
   });
 }

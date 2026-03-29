@@ -7,6 +7,7 @@ import '../models/playback_progress.dart';
 import '../models/playback_ui_status.dart';
 import '../models/sleep_timer_state.dart';
 import '../providers/playback_providers.dart';
+import '../../settings/providers/settings_providers.dart';
 
 class FullPlayerScreen extends ConsumerStatefulWidget {
   const FullPlayerScreen({super.key});
@@ -31,9 +32,9 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  String _formatSleepTimerLabel(SleepTimerState state) {
+  String _formatSleepTimerLabel(SleepTimerState state, int defaultMinutes) {
     if (!state.isActive || state.remaining == null) {
-      return 'Start Sleep Timer';
+      return 'Start Sleep Timer ($defaultMinutes min)';
     }
 
     final int totalSeconds = state.remaining!.inSeconds;
@@ -52,19 +53,21 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
     final PlaybackProgress progress = ref.watch(playbackProgressProvider);
     final double speed = ref.watch(playbackSpeedProvider);
     final SleepTimerState sleepTimerState = ref.watch(sleepTimerStateProvider);
+    final int sleepTimerDefaultMinutes = ref.watch(
+      sleepTimerDefaultMinutesProvider,
+    );
 
     if (episode == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Player')),
-        body: const Center(
-          child: Text('No episode is currently loaded.'),
-        ),
+        body: const Center(child: Text('No episode is currently loaded.')),
       );
     }
 
     final double durationSeconds = progress.duration.inSeconds.toDouble();
     final double sliderMax = durationSeconds > 0 ? durationSeconds : 1;
-    final double sliderValue = _dragValue ??
+    final double sliderValue =
+        _dragValue ??
         progress.position.inSeconds.clamp(0, sliderMax).toDouble();
     final bool isPlaying = status == PlaybackUiStatus.playing;
 
@@ -175,14 +178,16 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
               final int defaultMinutes = await ref
                   .read(playbackControllerProvider)
                   .loadSleepTimerDefaultMinutes();
-              await ref.read(playbackControllerProvider).startSleepTimer(
-                Duration(minutes: defaultMinutes),
-              );
+              await ref
+                  .read(playbackControllerProvider)
+                  .startSleepTimer(Duration(minutes: defaultMinutes));
             },
             icon: Icon(
               sleepTimerState.isActive ? Icons.timer_off : Icons.timer,
             ),
-            label: Text(_formatSleepTimerLabel(sleepTimerState)),
+            label: Text(
+              _formatSleepTimerLabel(sleepTimerState, sleepTimerDefaultMinutes),
+            ),
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
@@ -243,9 +248,7 @@ class _ArtworkPlaceholder extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         color: colorScheme.surfaceContainerHighest,
       ),
-      child: const Center(
-        child: Icon(Icons.podcasts, size: 72),
-      ),
+      child: const Center(child: Icon(Icons.podcasts, size: 72)),
     );
   }
 }

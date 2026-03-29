@@ -13,6 +13,7 @@ import 'features/playback/providers/playback_providers.dart';
 import 'features/playback/services/playback_persistence_coordinator.dart';
 import 'features/playback/services/podcast_audio_handler.dart';
 import 'features/playback/widgets/mini_player.dart';
+import 'features/settings/providers/settings_providers.dart';
 import 'features/settings/screens/settings_screen.dart';
 
 Future<void> main() async {
@@ -41,7 +42,8 @@ Future<void> main() async {
   );
   await notificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(
         const AndroidNotificationChannel(
           kNotificationChannelId,
@@ -63,9 +65,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        audioHandlerProvider.overrideWithValue(audioHandler),
-      ],
+      overrides: [audioHandlerProvider.overrideWithValue(audioHandler)],
       child: const MyApp(),
     ),
   );
@@ -107,11 +107,63 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     const Color accentColor = Color(0xFF1DB9FF);
+    final bool darkModeEnabled = ref.watch(darkModeEnabledProvider);
+
+    return MaterialApp(
+      title: 'Minacast',
+      debugShowCheckedModeBanner: false,
+      theme: _buildLightTheme(accentColor),
+      darkTheme: _buildDarkTheme(accentColor),
+      themeMode: darkModeEnabled ? ThemeMode.dark : ThemeMode.light,
+      home: const AppShell(),
+    );
+  }
+
+  ThemeData _buildLightTheme(Color accentColor) {
+    const Color backgroundColor = Color(0xFFF4F7FB);
+    const Color surfaceColor = Colors.white;
+    const Color textColor = Color(0xFF18202B);
+    const Color mutedColor = Color(0xFF677285);
+
+    final ColorScheme colorScheme = ColorScheme.light(
+      primary: accentColor,
+      secondary: accentColor,
+      surface: surfaceColor,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: textColor,
+      outline: mutedColor,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: backgroundColor,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      cardTheme: const CardThemeData(
+        color: surfaceColor,
+        margin: EdgeInsets.zero,
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surfaceColor,
+        selectedItemColor: accentColor,
+        unselectedItemColor: mutedColor,
+        type: BottomNavigationBarType.fixed,
+      ),
+    );
+  }
+
+  ThemeData _buildDarkTheme(Color accentColor) {
     const Color backgroundColor = Color(0xFF111318);
     const Color surfaceColor = Color(0xFF1E2028);
     const Color textColor = Color(0xFFE4E6EF);
 
-    const ColorScheme colorScheme = ColorScheme.dark(
+    final ColorScheme colorScheme = ColorScheme.dark(
       primary: accentColor,
       secondary: accentColor,
       surface: surfaceColor,
@@ -121,31 +173,26 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       outline: Color(0xFF9094A5),
     );
 
-    return MaterialApp(
-      title: 'Minacast',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        scaffoldBackgroundColor: backgroundColor,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        cardTheme: const CardThemeData(
-          color: surfaceColor,
-          margin: EdgeInsets.zero,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: surfaceColor,
-          selectedItemColor: accentColor,
-          unselectedItemColor: Color(0xFF9094A5),
-          type: BottomNavigationBarType.fixed,
-        ),
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: backgroundColor,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
+        elevation: 0,
+        centerTitle: false,
       ),
-      home: const AppShell(),
+      cardTheme: const CardThemeData(
+        color: surfaceColor,
+        margin: EdgeInsets.zero,
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surfaceColor,
+        selectedItemColor: accentColor,
+        unselectedItemColor: Color(0xFF9094A5),
+        type: BottomNavigationBarType.fixed,
+      ),
     );
   }
 }
@@ -177,7 +224,9 @@ class _AppShellState extends ConsumerState<AppShell> {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          Expanded(child: IndexedStack(index: _selectedIndex, children: _tabs)),
+          Expanded(
+            child: IndexedStack(index: _selectedIndex, children: _tabs),
+          ),
           player,
         ],
       ),

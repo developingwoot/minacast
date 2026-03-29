@@ -231,3 +231,15 @@ _This section is for architectural decisions made after the project has started.
 - **Alternatives considered:** Implementing a migration framework now — rejected as premature given no planned schema changes.
 - **Consequences:** The first session that requires a schema change must implement `onUpgrade` before making the change. This is a prerequisite, not optional.
 - **Revisit if:** Any phase unexpectedly needs a new column or table — implement `onUpgrade` first.
+
+---
+
+## Centralized App Settings Controller
+
+- **Date:** 2026-03-29
+- **Status:** Active
+- **Decision:** Phase 6 settings are managed through one typed Riverpod `AsyncNotifier` that loads and persists all three app settings (`dark_mode`, `playback_speed`, `sleep_timer_default_minutes`) from SQLite, with small derived providers consumed by the UI.
+- **Why:** All three values live in the same key-value table and are needed across multiple surfaces (`MaterialApp` theme, Settings screen, Full Player). A single controller avoids duplicated database reads, keeps parsing/serialization in one place, and gives the app one source of truth for persisted user preferences.
+- **Alternatives considered:** Separate async providers for each setting were possible, but would duplicate SQLite access patterns and spread fallback/default parsing logic across multiple files.
+- **Consequences:** Theme switching is now driven from app state instead of hard-coded theme constants in `main.dart`, and the Settings screen can update all preferences through a consistent API. Future settings should default to extending this controller unless they have a clear reason to live elsewhere.
+- **Revisit if:** The settings surface grows enough that independent refresh lifecycles or feature-scoped settings modules become meaningfully easier to maintain.
