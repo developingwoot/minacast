@@ -5,6 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:minacast/data/database_helper.dart';
 import 'package:minacast/data/models/episode.dart';
+import 'package:minacast/features/episode_detail/screens/episode_detail_screen.dart';
 import 'package:minacast/features/home/providers/feed_provider.dart';
 import 'package:minacast/features/home/screens/home_screen.dart';
 
@@ -85,5 +86,30 @@ void main() {
         .toList();
     expect((tiles.first.title as Text).data, 'Newer Episode');
     expect((tiles.last.title as Text).data, 'Older Episode');
+  });
+
+  testWidgets('tapping a home episode opens episode detail', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      buildTestApp(const <Episode>[
+        Episode(
+          guid: 'episode-1',
+          podcastRssUrl: 'https://example.com/feed.xml',
+          title: 'Episode Detail Test',
+          audioUrl: 'https://example.com/episode.mp3',
+          descriptionHtml: '<p>Show notes</p>',
+          durationSeconds: 120,
+          pubDate: 100,
+        ),
+      ]),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('Episode Detail Test'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EpisodeDetailScreen), findsOneWidget);
+    expect(find.text('Show Notes'), findsOneWidget);
   });
 }

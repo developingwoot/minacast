@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/episode.dart';
+import '../../episode_detail/screens/episode_detail_screen.dart';
 import '../../podcast_detail/widgets/episode_list_item.dart';
 import '../../search/screens/search_screen.dart';
 import '../providers/feed_provider.dart';
@@ -13,6 +14,15 @@ class HomeScreen extends ConsumerWidget {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (BuildContext context) => const SearchScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openEpisodeDetail(BuildContext context, Episode episode) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) =>
+            EpisodeDetailScreen(episode: episode),
       ),
     );
   }
@@ -54,7 +64,11 @@ class HomeScreen extends ConsumerWidget {
             separatorBuilder: (BuildContext context, int index) =>
                 const Divider(height: 1),
             itemBuilder: (BuildContext context, int index) {
-              return EpisodeListItem(episode: episodes[index]);
+              final Episode episode = episodes[index];
+              return EpisodeListItem(
+                episode: episode,
+                onTap: () => _openEpisodeDetail(context, episode),
+              );
             },
           );
         },

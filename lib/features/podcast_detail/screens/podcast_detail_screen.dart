@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/podcast.dart';
+import '../../episode_detail/screens/episode_detail_screen.dart';
 import '../providers/podcast_detail_provider.dart';
 import '../widgets/episode_list_item.dart';
 
@@ -157,7 +158,16 @@ class _PodcastDetailBody extends ConsumerWidget {
             separatorBuilder: (BuildContext context, int index) =>
                 const Divider(height: 1),
             itemBuilder: (BuildContext context, int index) {
-              return EpisodeListItem(episode: detail.episodes[index]);
+              final episode = detail.episodes[index];
+              return EpisodeListItem(
+                episode: episode,
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) =>
+                        EpisodeDetailScreen(episode: episode),
+                  ),
+                ),
+              );
             },
           ),
       ],

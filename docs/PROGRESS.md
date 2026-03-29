@@ -6,12 +6,35 @@
 - [x] **1.2 — SQLite schema + database helper**
   - `DatabaseHelper` singleton with all four tables (`podcasts`, `episodes`, `queue`, `settings`), `PRAGMA foreign_keys = ON`, default settings seed, and 20 query methods
   - Typed model classes: `Podcast`, `Episode`, `QueueEntry`
-  - 23 unit tests passing against in-memory SQLite (`sqflite_common_ffi`)
+  - 23 database unit tests passing against in-memory SQLite (`sqflite_common_ffi`)
   - App logo SVG added at `assets/images/minacast.svg`
 - [x] **Android build config: core library desugaring enabled**
   - Added `isCoreLibraryDesugaringEnabled = true` and `desugar_jdk_libs` to `android/app/build.gradle.kts` to satisfy `flutter_local_notifications`
   - Verified the original `:app:checkDebugAarMetadata` failure is resolved
-  - Ran `flutter test` successfully: 35 tests passed
+  - Ran `flutter test` successfully at the time: 35 tests passed
+- [x] **2.1 — iTunes Search API integration + Search Results screen**
+  - `PodcastSearchService` calls the iTunes Search API with typed parsing and safe fallback-to-empty behavior on network and JSON errors
+  - `SearchScreen` is wired from Home, uses a debounced Riverpod `searchProvider`, and renders podcast cards with artwork, title, and author
+  - Search service and provider coverage added in `test/features/search/services/podcast_search_service_test.dart` and `test/features/providers/providers_test.dart`
+- [x] **2.2 — RSS fetch + parse + Podcast Detail screen**
+  - `RssFeedService` fetches RSS, parses feed description plus valid episodes, and skips malformed items safely
+  - `PodcastDetailScreen` loads artwork, metadata, description, and episode list from the feed
+  - Subscribe / Unsubscribe is wired through `podcastDetailProvider` and persists podcast plus episode rows to SQLite
+  - RSS service and provider coverage added in `test/features/podcast_detail/services/rss_feed_service_test.dart` and `test/features/providers/providers_test.dart`
+- [x] **2.3 — Home / Feed screen + navigation shell**
+  - `AppShell` provides Home and Settings tabs via bottom navigation
+  - `HomeScreen` reads from `feedProvider`, shows an empty state with search CTA, and renders subscribed episodes newest-first
+  - Feed provider coverage added in `test/features/providers/providers_test.dart`
+- [x] **3.1 — Episode Detail screen**
+  - Added `EpisodeDetailScreen` under `features/episode_detail` with title, pub date, duration, and show notes rendered through `flutter_html`
+  - Episode rows from Home and Podcast Detail now navigate into Episode Detail
+  - `Play` and `Add to Queue` buttons are present as explicit placeholders, keeping playback and queue work scoped to later sessions
+  - Added widget coverage for detail rendering and Home → Episode Detail navigation
+- [x] **Foundational data helpers completed ahead of later UI phases**
+  - Queue CRUD exists in `DatabaseHelper` (`enqueue`, `getQueue`, `updateQueueOrder`, `removeFromQueue`, `clearQueue`)
+  - Settings persistence exists in `DatabaseHelper` via `getSetting` / `setSetting`
+  - Episode progress helpers exist in `DatabaseHelper` for listened position, completion state, and local file path updates
+  - Current suite is green: `flutter test` passes with 37 tests
 
 ---
 
@@ -23,39 +46,11 @@ _(nothing yet)_
 
 ## Not Started
 
-Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 1 (Discover → Subscribe) is completed end-to-end before Journey 2 (Streaming) begins, and Journey 2 before Journey 3 (Queue).
-
----
-
-### Phase 2 — Journey 1: Discover and Subscribe
-
-- [ ] **2.1 — iTunes Search API integration + Search Results screen**
-  - Sessions: 1
-  - What gets built: `PodcastSearchService` that calls the iTunes Search API and deserializes results into a `Podcast` model. Search Results screen showing podcast cards (artwork via `cached_network_image`, title, author). Search bar wired up with debounce.
-  - Blocks: Podcast Detail screen.
-  - Verify: Type a podcast name → cards appear with artwork, title, and author.
-
-- [ ] **2.2 — RSS fetch + parse + Podcast Detail screen**
-  - Sessions: 1
-  - What gets built: `RssFeedService` that fetches a feed URL and parses it with `dart_rss` into a list of `Episode` models. Podcast Detail screen showing artwork, title, author, description, and scrollable episode list. Subscribe / Unsubscribe button that writes/removes the podcast and its episodes to SQLite.
-  - Blocks: Home Feed screen, background sync.
-  - Verify: Tap a search result → detail screen loads with episode list → tap Subscribe → row appears in `podcasts` table (confirm via debug log or DevTools).
-
-- [ ] **2.3 — Home / Feed screen + navigation shell**
-  - Sessions: 1
-  - What gets built: Bottom navigation or app shell with Home and Settings tabs. Home Feed screen that reads all episodes from subscribed podcasts, sorts newest-first, and renders an episode list. Empty state shown when no subscriptions exist. Riverpod provider powering the feed.
-  - Blocks: Episode Detail screen, Mini Player placement.
-  - Verify: Subscribe to a podcast → navigate to Home → episode list populates sorted newest-first. Unsubscribe → list empties.
+Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 1 (Discover → Subscribe) is now implemented, so the next unfinished work starts with Journey 2 (Streaming).
 
 ---
 
 ### Phase 3 — Journey 2: Stream an Episode
-
-- [ ] **3.1 — Episode Detail screen**
-  - Sessions: 1
-  - What gets built: Episode Detail screen (artwork, title, pub date, show notes rendered with `flutter_html`). Play button that is wired up but can just log for now. Add to Queue button placeholder.
-  - Blocks: nothing on its own — unlocks the Play integration in the next session.
-  - Verify: Tap an episode from the feed → detail screen opens with rendered HTML show notes.
 
 - [ ] **3.2 — Audio playback: streaming + `audio_service` + `just_audio` integration**
   - Sessions: 2
