@@ -1,4 +1,4 @@
-package com.example.minacast
+package com.developingwoot.minacast
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

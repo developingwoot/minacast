@@ -128,7 +128,7 @@ Items are ordered so each session builds on the last and ends with something ver
 
 - [ ] **7.3 — Play Store listing and submission**
   - Sessions: 1
-  - What gets built: Play Store developer account (one-time $25 fee), app listing with description, screenshots, content rating questionnaire completed, privacy policy (simple hosted page noting all data is local-only). AAB uploaded and submitted for review.
+  - What gets built: Play Store developer acco6mple hosted page noting all data is local-only). AAB uploaded and submitted for review.
   - Blocks: nothing.
   - Verify: App appears in the Play Console internal test track and can be installed by a test account.
 
