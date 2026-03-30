@@ -99,6 +99,16 @@
   - Fixed `key.properties` keystore path (`app/release-key.jks` → `release-key.jks`)
   - `flutter build appbundle --release` succeeds — signed AAB at `build/app/outputs/bundle/release/app-release.aab` (52.2 MB)
   - All 74 tests pass
+- [x] **Home feed filter + sort toggle + Play All**
+  - Home feed now filters to unlistened and in-progress episodes only (`is_completed = 0`); completed episodes no longer appear in the feed
+  - Sort toggle in the AppBar flips between newest-first and oldest-first; resets to newest-first on cold start (ephemeral `NotifierProvider`)
+  - Play All button (`Icons.playlist_play`) clears the queue, fills it with all displayed episodes in current sort order, and starts playback from the top; in-progress episodes auto-resume from saved position
+  - All 74 tests pass
+- [x] **Swipe-to-mark-as-played on Home feed**
+  - Swipe left on any home feed episode tile marks it as played; episode disappears from the feed immediately
+  - "Marked as played" snackbar with a 4-second Undo action allows accidental swipes to be reversed
+  - Added `unmarkEpisodeCompleted` to `DatabaseHelper` to support undo
+  - All 74 tests pass
 
 ---
 

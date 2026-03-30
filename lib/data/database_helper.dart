@@ -266,12 +266,16 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Episode>> getAllEpisodesSortedByDate() async {
+  Future<List<Episode>> getAllEpisodesSortedByDate({
+    bool ascending = false,
+  }) async {
     try {
       final Database db = await database;
+      final String direction = ascending ? 'ASC' : 'DESC';
       final List<Map<String, Object?>> rows = await db.query(
         'episodes',
-        orderBy: 'pub_date DESC',
+        where: 'is_completed = 0',
+        orderBy: 'pub_date $direction',
       );
       return rows.map(Episode.fromMap).toList();
     } on DatabaseException catch (e) {
@@ -306,6 +310,21 @@ class DatabaseHelper {
       );
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('markEpisodeCompleted failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> unmarkEpisodeCompleted(String guid) async {
+    try {
+      final Database db = await database;
+      await db.update(
+        'episodes',
+        {'is_completed': 0},
+        where: 'guid = ?',
+        whereArgs: [guid],
+      );
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('unmarkEpisodeCompleted failed: $e');
       rethrow;
     }
   }

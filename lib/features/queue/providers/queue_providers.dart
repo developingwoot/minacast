@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/episode.dart';
 import '../../../data/models/queued_episode.dart';
 import '../../../data/providers/database_provider.dart';
+import '../../playback/services/playback_controller.dart';
 import '../services/queue_service.dart';
 
 final Provider<QueueService> queueServiceProvider = Provider<QueueService>((
@@ -35,6 +36,16 @@ class QueueNotifier extends AsyncNotifier<List<QueuedEpisode>> {
   Future<void> reorderQueue(int oldIndex, int newIndex) async {
     await _queueService.reorderQueue(oldIndex, newIndex);
     await _reloadQueue();
+  }
+
+  Future<void> replaceQueueAndPlay(
+    List<Episode> episodes,
+    PlaybackController playbackController,
+  ) async {
+    if (episodes.isEmpty) return;
+    await _queueService.replaceQueueWithEpisodes(episodes);
+    await _reloadQueue();
+    await playbackController.playEpisode(episodes.first);
   }
 
   Future<void> _reloadQueue() async {

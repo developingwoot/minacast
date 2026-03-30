@@ -93,6 +93,16 @@ class QueueService {
     await _databaseHelper.replaceQueueOrder(reorderedEntries);
   }
 
+  /// Clears the entire queue and replaces it with [episodes] in the given order.
+  /// Index 0 → sort_order 0 (plays first). Preserves display order exactly.
+  Future<void> replaceQueueWithEpisodes(List<Episode> episodes) async {
+    if (episodes.isEmpty) return;
+    await _databaseHelper.clearQueue();
+    for (int i = 0; i < episodes.length; i++) {
+      await _databaseHelper.enqueue(episodes[i].guid, i);
+    }
+  }
+
   Future<void> _normalizeQueueOrder() async {
     final List<QueueEntry> queue = await _databaseHelper.getQueue();
     final List<QueueEntry> normalizedEntries = queue

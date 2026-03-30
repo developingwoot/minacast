@@ -56,7 +56,10 @@ class QueueScreen extends ConsumerWidget {
             },
             itemBuilder: (BuildContext context, int index) {
               final QueuedEpisode queuedEpisode = queuedEpisodes[index];
-              return _QueuedEpisodeTile(queuedEpisode: queuedEpisode);
+              return _QueuedEpisodeTile(
+                key: ValueKey<int>(queuedEpisode.queueId),
+                queuedEpisode: queuedEpisode,
+              );
             },
           );
         },
@@ -100,7 +103,7 @@ class _QueueEmptyState extends StatelessWidget {
 }
 
 class _QueuedEpisodeTile extends ConsumerWidget {
-  const _QueuedEpisodeTile({required this.queuedEpisode});
+  const _QueuedEpisodeTile({super.key, required this.queuedEpisode});
 
   final QueuedEpisode queuedEpisode;
 

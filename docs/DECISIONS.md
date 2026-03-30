@@ -2,6 +2,28 @@
 
 ---
 
+## Home feed shows only unlistened/in-progress episodes
+
+- **Date:** 2026-03-30
+- **Status:** Active
+- **Decision:** `getAllEpisodesSortedByDate` filters `is_completed = 0`. Completed episodes are hidden from the home feed.
+- **Why:** The home feed is a listening queue, not a listening history. Showing completed episodes clutters the feed and makes "Play All" less useful (you'd re-queue things you've already heard).
+- **Alternatives considered:** A separate "History" tab (out of scope for v1); a toggle to show/hide completed (added complexity for marginal gain).
+- **Consequences:** Users have no in-app way to re-listen to a completed episode from the home feed. If re-listening becomes a requested feature, the episode detail screen (accessible from Podcast Detail) still shows all episodes including completed ones.
+- **Revisit if:** Users want a history/re-listen flow.
+
+---
+
+## Sort toggle is ephemeral (not persisted to settings)
+
+- **Date:** 2026-03-30
+- **Status:** Active
+- **Decision:** `feedSortProvider` is an in-memory `NotifierProvider`. Sort order resets to newest-first on cold start.
+- **Why:** Keeps the implementation simple — no settings table write needed, no migration risk. The sort order is a session preference, not a long-lived user setting like dark mode or playback speed.
+- **Revisit if:** Users consistently complain about losing their sort preference on restart.
+
+---
+
 ## Flutter for Android
 
 - **Date:** 2026-03-29
