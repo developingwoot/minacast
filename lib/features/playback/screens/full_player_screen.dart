@@ -7,6 +7,7 @@ import '../models/playback_progress.dart';
 import '../models/playback_ui_status.dart';
 import '../models/sleep_timer_state.dart';
 import '../providers/playback_providers.dart';
+import '../../settings/models/app_settings.dart';
 import '../../settings/providers/settings_providers.dart';
 
 class FullPlayerScreen extends ConsumerStatefulWidget {
@@ -156,10 +157,14 @@ class _FullPlayerScreenState extends ConsumerState<FullPlayerScreen> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: <double>[0.5, 1.0, 1.5, 2.0].map((double option) {
+            children: AppSettings.supportedPlaybackSpeeds.map((double option) {
               final bool selected = speed == option;
+              final String label =
+                  option == option.truncateToDouble()
+                      ? '${option.toInt()}x'
+                      : '${option}x';
               return ChoiceChip(
-                label: Text('${option.toStringAsFixed(1)}x'),
+                label: Text(label),
                 selected: selected,
                 onSelected: (_) => ref
                     .read(playbackControllerProvider)

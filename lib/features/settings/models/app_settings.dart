@@ -8,7 +8,9 @@ class AppSettings {
   static const List<double> supportedPlaybackSpeeds = <double>[
     0.5,
     1.0,
+    1.25,
     1.5,
+    1.75,
     2.0,
   ];
   static const List<int> supportedSleepTimerMinutes = <int>[15, 30, 45, 60];

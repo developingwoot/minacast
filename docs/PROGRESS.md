@@ -127,6 +127,10 @@
   - Replaced unmaintained `flutter_html` v3 with `flutter_widget_from_html` — single usage site in `EpisodeDetailScreen`; test updated accordingly
   - iTunes search results now surface `averageUserRating` and `userRatingCount` from the API response; `PodcastCard` displays a compact star row + review count when data is present
   - All 75 tests pass, `flutter analyze` clean
+- [x] **Playback speed options expanded**
+  - Added 1.25x and 1.75x to the supported speeds: `[0.5, 1.0, 1.25, 1.5, 1.75, 2.0]` (uniform 0.25x steps above 1.0)
+  - Full Player chip list now references `AppSettings.supportedPlaybackSpeeds` directly so it stays in sync with the Settings dropdown automatically
+  - All 75 tests pass
 
 ---
 
