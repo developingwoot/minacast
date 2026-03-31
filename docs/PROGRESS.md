@@ -131,6 +131,11 @@
   - Added 1.25x and 1.75x to the supported speeds: `[0.5, 1.0, 1.25, 1.5, 1.75, 2.0]` (uniform 0.25x steps above 1.0)
   - Full Player chip list now references `AppSettings.supportedPlaybackSpeeds` directly so it stays in sync with the Settings dropdown automatically
   - All 75 tests pass
+- [x] **Fix on-open download: maintain 3 downloaded, not always download 3**
+  - `OnOpenDownloadService._buildCandidates()` now calls `DatabaseHelper.getDownloadedEpisodeCount()` first and only downloads enough to bring the total to 3
+  - `getDownloadedEpisodeCount()` added to `DatabaseHelper` — counts episodes where `local_file_path IS NOT NULL AND is_completed = 0`
+  - Bumped to version `1.0.3+4`
+  - All 75 tests pass
 
 ---
 

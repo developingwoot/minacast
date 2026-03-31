@@ -357,6 +357,16 @@ class DatabaseHelper {
     }
   }
 
+  /// Returns the count of episodes that have a local file and are not yet completed.
+  Future<int> getDownloadedEpisodeCount() async {
+    final Database db = await database;
+    final List<Map<String, Object?>> result = await db.rawQuery(
+      'SELECT COUNT(*) FROM episodes '
+      'WHERE local_file_path IS NOT NULL AND is_completed = 0',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   /// Returns the oldest incomplete episode for [rssUrl] with no local file downloaded.
   /// "Oldest" means smallest pub_date — so the user works through a backlog in order.
   Future<Episode?> getOldestUnlistenedEpisodeWithoutLocalFile(

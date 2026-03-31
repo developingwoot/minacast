@@ -46,25 +46,29 @@ class OnOpenDownloadService {
     return results.contains(ConnectivityResult.wifi);
   }
 
-  /// Builds a download candidate list: queue episodes first, then feed episodes,
-  /// up to [_kMaxOnOpenDownloads] total. Skips any that already have a local file.
+  /// Builds a download candidate list: queue episodes first, then feed episodes.
+  /// Only downloads enough to bring the total downloaded count up to [_kMaxOnOpenDownloads].
   Future<List<Episode>> _buildCandidates() async {
+    final int alreadyDownloaded = await _db.getDownloadedEpisodeCount();
+    final int slotsRemaining = _kMaxOnOpenDownloads - alreadyDownloaded;
+    if (slotsRemaining <= 0) return <Episode>[];
+
     final List<Episode> candidates = <Episode>[];
 
     // Queue episodes first (in sort order)
     final List<Episode> queueCandidates = await _getQueueEpisodesWithoutFile();
     for (final Episode e in queueCandidates) {
-      if (candidates.length >= _kMaxOnOpenDownloads) break;
+      if (candidates.length >= slotsRemaining) break;
       candidates.add(e);
     }
 
-    if (candidates.length >= _kMaxOnOpenDownloads) return candidates;
+    if (candidates.length >= slotsRemaining) return candidates;
 
     // Fill remaining slots from the home feed (newest first)
     final Set<String> alreadyIncluded = candidates.map((Episode e) => e.guid).toSet();
     final List<Episode> feedEpisodes = await _db.getAllEpisodesSortedByDate();
     for (final Episode e in feedEpisodes) {
-      if (candidates.length >= _kMaxOnOpenDownloads) break;
+      if (candidates.length >= slotsRemaining) break;
       if (alreadyIncluded.contains(e.guid)) continue;
       if (e.localFilePath != null) continue;
       candidates.add(e);
