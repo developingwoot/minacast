@@ -8,7 +8,9 @@ import 'package:workmanager/workmanager.dart';
 
 import 'background/background_sync_task.dart';
 import 'data/database_helper.dart';
+import 'features/home/providers/feed_provider.dart';
 import 'features/home/screens/home_screen.dart';
+import 'features/home/services/on_open_download_service.dart';
 import 'features/playback/providers/playback_providers.dart';
 import 'features/playback/services/playback_persistence_coordinator.dart';
 import 'features/playback/services/podcast_audio_handler.dart';
@@ -87,6 +89,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _coordinator = ref.read(playbackPersistenceCoordinatorProvider);
   }
+
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -208,6 +211,20 @@ class _AppShellState extends ConsumerState<AppShell> {
   int _selectedIndex = 0;
 
   static const List<Widget> _tabs = <Widget>[HomeScreen(), SettingsScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    _triggerOnOpenDownload();
+  }
+
+  void _triggerOnOpenDownload() {
+    OnOpenDownloadService(databaseHelper: DatabaseHelper.instance)
+        .run()
+        .then((_) {
+          if (mounted) ref.invalidate(feedProvider);
+        });
+  }
 
   void _onDestinationSelected(int index) {
     setState(() {

@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../data/models/episode.dart';
 import '../../../data/providers/database_provider.dart';
@@ -9,6 +14,7 @@ import '../../podcast_detail/widgets/episode_list_item.dart';
 import '../../queue/providers/queue_providers.dart';
 import '../../queue/screens/queue_screen.dart';
 import '../../search/screens/search_screen.dart';
+import '../providers/downloading_episodes_provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/feed_sort_provider.dart';
 
@@ -71,6 +77,119 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _showDownloadMenu(
+    BuildContext context,
+    WidgetRef ref,
+    Episode episode,
+  ) async {
+    final bool isDownloaded = episode.localFilePath != null;
+    final bool isDownloading =
+        ref.read(downloadingEpisodesProvider).contains(episode.guid);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: Icon(
+                  isDownloaded
+                      ? Icons.offline_pin_outlined
+                      : isDownloading
+                      ? Icons.downloading_outlined
+                      : Icons.download_outlined,
+                ),
+                title: Text(
+                  isDownloaded
+                      ? 'Already downloaded'
+                      : isDownloading
+                      ? 'Downloading…'
+                      : 'Download episode',
+                ),
+                enabled: !isDownloaded && !isDownloading,
+                onTap: isDownloaded || isDownloading
+                    ? null
+                    : () {
+                        Navigator.of(ctx).pop();
+                        _downloadEpisode(context, ref, episode);
+                      },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _downloadEpisode(
+    BuildContext context,
+    WidgetRef ref,
+    Episode episode,
+  ) async {
+    // Check WiFi before starting
+    final List<ConnectivityResult> results =
+        await Connectivity().checkConnectivity();
+    if (!results.contains(ConnectivityResult.wifi)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connect to WiFi to download episodes.'),
+        ),
+      );
+      return;
+    }
+
+    // Mark as downloading
+    ref.read(downloadingEpisodesProvider.notifier).add(episode.guid);
+
+    try {
+      final Directory appDir = await getApplicationSupportDirectory();
+      final Directory downloadDir = Directory('${appDir.path}/downloads');
+      if (!await downloadDir.exists()) await downloadDir.create(recursive: true);
+
+      final String safeFilename =
+          '${episode.guid.replaceAll(RegExp(r'[^\w\-.]'), '_')}.mp3';
+      final String filePath = '${downloadDir.path}/$safeFilename';
+
+      final http.Client client = http.Client();
+      try {
+        final http.StreamedResponse response = await client.send(
+          http.Request('GET', Uri.parse(episode.audioUrl)),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
+        }
+
+        final File file = File(filePath);
+        final IOSink sink = file.openWrite();
+        try {
+          await response.stream.pipe(sink);
+        } finally {
+          await sink.close();
+        }
+      } finally {
+        client.close();
+      }
+
+      await ref.read(databaseHelperProvider).updateLocalFilePath(
+        episode.guid,
+        filePath,
+      );
+      ref.invalidate(feedProvider);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Download failed. Please try again.')),
+        );
+      }
+    } finally {
+      ref.read(downloadingEpisodesProvider.notifier).remove(episode.guid);
+    }
+  }
+
   void _toggleSort(WidgetRef ref) {
     ref.read(feedSortProvider.notifier).toggle();
   }
@@ -100,6 +219,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Episode>> feedState = ref.watch(feedProvider);
     final FeedSortOrder sortOrder = ref.watch(feedSortProvider);
+    final Set<String> downloadingGuids = ref.watch(downloadingEpisodesProvider);
 
     final List<Episode>? episodes = feedState.asData?.value;
 
@@ -162,6 +282,9 @@ class HomeScreen extends ConsumerWidget {
                   const Divider(height: 1),
               itemBuilder: (BuildContext context, int index) {
                 final Episode episode = episodes[index];
+                final bool isDownloading =
+                    downloadingGuids.contains(episode.guid);
+                final bool isDownloaded = episode.localFilePath != null;
                 return Dismissible(
                   key: ValueKey<String>(episode.guid),
                   direction: DismissDirection.endToStart,
@@ -190,9 +313,15 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   onDismissed: (DismissDirection direction) =>
                       _markAsPlayed(context, ref, episode),
-                  child: EpisodeListItem(
-                    episode: episode,
-                    onTap: () => _openEpisodeDetail(context, episode),
+                  child: GestureDetector(
+                    onLongPress: () =>
+                        _showDownloadMenu(context, ref, episode),
+                    child: EpisodeListItem(
+                      episode: episode,
+                      onTap: () => _openEpisodeDetail(context, episode),
+                      isDownloaded: isDownloaded,
+                      isDownloading: isDownloading,
+                    ),
                   ),
                 );
               },

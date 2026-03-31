@@ -5,8 +5,16 @@ import '../../../data/models/episode.dart';
 class EpisodeListItem extends StatelessWidget {
   final Episode episode;
   final VoidCallback? onTap;
+  final bool isDownloaded;
+  final bool isDownloading;
 
-  const EpisodeListItem({super.key, required this.episode, this.onTap});
+  const EpisodeListItem({
+    super.key,
+    required this.episode,
+    this.onTap,
+    this.isDownloaded = false,
+    this.isDownloading = false,
+  });
 
   String _formatDuration(int seconds) {
     final int h = seconds ~/ 3600;
@@ -38,6 +46,20 @@ class EpisodeListItem extends StatelessWidget {
     return '$month ${dt.day}, ${dt.year}';
   }
 
+  Widget _buildTrailing(ColorScheme colors) {
+    if (isDownloading) {
+      return SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2, color: colors.outline),
+      );
+    }
+    if (isDownloaded) {
+      return Icon(Icons.offline_pin_outlined, color: colors.primary);
+    }
+    return Icon(Icons.play_arrow_outlined, color: colors.outline);
+  }
+
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
@@ -65,9 +87,7 @@ class EpisodeListItem extends StatelessWidget {
       subtitle: meta.isNotEmpty
           ? Text(meta, style: text.bodySmall?.copyWith(color: colors.outline))
           : null,
-      trailing: onTap != null
-          ? Icon(Icons.play_arrow_outlined, color: colors.outline)
-          : null,
+      trailing: onTap != null ? _buildTrailing(colors) : null,
     );
   }
 }

@@ -120,15 +120,15 @@
 
 ---
 
-## Silent Downloads (No Download Management UI)
+## Downloads — Light-Touch Visible System
 
-- **Date:** 2026-03-29
+- **Date:** 2026-03-29 (revised 2026-03-31)
 - **Status:** Active
-- **Decision:** Downloads are fully automatic and invisible. There is no per-episode download state indicator, progress bar, cancel button, or manual download trigger in the UI.
-- **Why:** Simplicity. A download management UI requires tracking download state in the DB, surfacing that state in episode list items, and handling partial/failed downloads gracefully. The silent approach keeps the UI clean and the implementation scope contained. The automatic logic (oldest unlistened, ≥ 500 MB free) covers the common case without requiring user decisions.
-- **Alternatives considered:** Explicit per-episode download buttons were considered and explicitly ruled out for v1 as scope reduction.
-- **Consequences:** Users have no visibility into what is or isn't downloaded. They cannot force a download, cancel one, or see storage usage per podcast. If a download fails silently, the episode falls back to streaming with no indication. The 500 MB threshold is a hard-coded heuristic with no user-facing control.
-- **Revisit if:** User feedback indicates frustration with not knowing what's downloaded, or if storage management becomes a complaint.
+- **Decision:** Downloads are automatic but now lightly visible. Three mechanisms work together: (1) a daily WorkManager background task downloads one episode per podcast silently; (2) on app open over WiFi, up to 3 queue/feed episodes are downloaded automatically; (3) users can long-press any home feed episode to manually trigger a download. Episode list tiles show a pin icon when an episode is downloaded and a progress spinner during a manual download. Local files are automatically deleted when an episode finishes playing. There is no download management screen, cancel button, or per-podcast storage breakdown.
+- **Why:** Real usage showed value in knowing which episodes are available offline. The light indicator (pin icon) requires no user action but answers "is this ready offline?" at a glance. The long-press manual trigger covers the case where a user wants to guarantee a specific episode is ready. Auto-delete on completion keeps storage from growing unbounded without requiring any user decision-making.
+- **Alternatives considered:** A full download management UI (cancel, per-podcast breakdown, storage usage) was ruled out — too much scope for the value it adds. WiFi-only download constraint was chosen over cellular to protect data plans; no user toggle for this in v1.
+- **Consequences:** Users on cellular only will never see auto-downloads and will see "Connect to WiFi" on manual download attempts. Storage is managed automatically. Orphaned partial downloads (e.g. app killed mid-download) will remain on disk but won't be referenced in the DB; they are harmless but not cleaned up in v1.
+- **Revisit if:** Users request cellular download control, or orphaned partial files become a storage concern.
 
 ---
 

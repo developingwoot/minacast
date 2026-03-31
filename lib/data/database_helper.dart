@@ -342,6 +342,21 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> clearLocalFilePath(String guid) async {
+    try {
+      final Database db = await database;
+      await db.update(
+        'episodes',
+        {'local_file_path': null},
+        where: 'guid = ?',
+        whereArgs: [guid],
+      );
+    } on DatabaseException catch (e) {
+      if (kDebugMode) debugPrint('clearLocalFilePath failed: $e');
+      rethrow;
+    }
+  }
+
   /// Returns the oldest incomplete episode for [rssUrl] with no local file downloaded.
   /// "Oldest" means smallest pub_date — so the user works through a backlog in order.
   Future<Episode?> getOldestUnlistenedEpisodeWithoutLocalFile(

@@ -109,6 +109,17 @@
   - "Marked as played" snackbar with a 4-second Undo action allows accidental swipes to be reversed
   - Added `unmarkEpisodeCompleted` to `DatabaseHelper` to support undo
   - All 74 tests pass
+- [x] **7.3 — Play Store listing and submission**
+  - Privacy policy page created and linked in Play Console
+  - Signed AAB (`app-release.aab`, 52.2 MB) uploaded to Play Console
+  - App submitted for review — awaiting Google approval
+- [x] **Smart episode downloading**
+  - Added `connectivity_plus` dependency for runtime WiFi detection
+  - **Auto-delete on completion:** `QueueAutoplayService` now deletes the local audio file and clears `local_file_path` in the DB when an episode finishes playing; `DatabaseHelper.clearLocalFilePath()` added
+  - **On-open WiFi download:** `OnOpenDownloadService` runs at app start — if on WiFi, downloads up to 3 undownloaded episodes (queue first, then feed) in the background; `feedProvider` is refreshed when done
+  - **Long-press manual download:** Long-pressing any home feed episode shows a bottom sheet with a "Download episode" action; WiFi is checked before downloading; non-WiFi attempts show a snackbar
+  - **Visual indicator:** Episode list tiles show a pin icon (`Icons.offline_pin_outlined`) when downloaded and a small spinner during a manual download
+  - All 74 tests pass, `flutter analyze` clean
 
 ---
 
@@ -120,17 +131,7 @@ _(nothing yet)_
 
 ## Not Started
 
-Items are ordered so each session builds on the last and ends with something verifiable on a real device or emulator. Journey 2 (Streaming) is now implemented in code, so the next unfinished work starts with Journey 3 (Queue).
-
----
-
-### Phase 7 — Polish & Release Prep
-
-- [ ] **7.3 — Play Store listing and submission**
-  - Sessions: 1
-  - What gets built: Play Store developer acco6mple hosted page noting all data is local-only). AAB uploaded and submitted for review.
-  - Blocks: nothing.
-  - Verify: App appears in the Play Console internal test track and can be installed by a test account.
+_(nothing yet)_
 
 ---
 
