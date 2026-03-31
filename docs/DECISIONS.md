@@ -251,7 +251,7 @@ _This section is for architectural decisions made after the project has started.
 - **Decision:** Defer `onUpgrade` implementation until the first schema change is needed. Current `_dbVersion` remains 1.
 - **Why:** No schema changes are planned for Phase 5 or Phase 6. Adding migration infrastructure before it is needed would be speculative.
 - **Alternatives considered:** Implementing a migration framework now — rejected as premature given no planned schema changes.
-- **Consequences:** The first session that requires a schema change must implement `onUpgrade` before making the change. This is a prerequisite, not optional.
+- **Consequences:** The first session that requires a schema change must implement `onUpgrade` in `lib/data/database_helper.dart` and bump `_dbVersion` before making the change. Skipping this will crash existing installs on app update. This is a prerequisite, not optional.
 - **Revisit if:** Any phase unexpectedly needs a new column or table — implement `onUpgrade` first.
 
 ---
