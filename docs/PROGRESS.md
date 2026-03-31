@@ -120,6 +120,13 @@
   - **Long-press manual download:** Long-pressing any home feed episode shows a bottom sheet with a "Download episode" action; WiFi is checked before downloading; non-WiFi attempts show a snackbar
   - **Visual indicator:** Episode list tiles show a pin icon (`Icons.offline_pin_outlined`) when downloaded and a small spinner during a manual download
   - All 74 tests pass, `flutter analyze` clean
+- [x] **Security hardening + dependency upgrade**
+  - Keystore password strengthened from `minacast123` to a random 32-char credential in `android/key.properties`
+  - RSS audio URL scheme validation added in `RssFeedService` — non-HTTP(S) enclosure URLs are now rejected before being stored
+  - Notification channel IDs updated from `com.example.minacast` to `com.developingwoot.minacast`
+  - Replaced unmaintained `flutter_html` v3 with `flutter_widget_from_html` — single usage site in `EpisodeDetailScreen`; test updated accordingly
+  - iTunes search results now surface `averageUserRating` and `userRatingCount` from the API response; `PodcastCard` displays a compact star row + review count when data is present
+  - All 75 tests pass, `flutter analyze` clean
 
 ---
 

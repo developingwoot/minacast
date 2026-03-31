@@ -58,7 +58,7 @@ Future<void> main() async {
   final PodcastAudioHandler audioHandler = await AudioService.init(
     builder: () => PodcastAudioHandler(databaseHelper: DatabaseHelper.instance),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.example.minacast.playback',
+      androidNotificationChannelId: 'com.developingwoot.minacast.playback',
       androidNotificationChannelName: 'Minacast Playback',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,

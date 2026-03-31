@@ -5,6 +5,9 @@ class Podcast {
   final String description;
   final String artworkUrl;
   final int lastCheckedAt;
+  // Populated from iTunes Search API only — not persisted to the database.
+  final double? averageUserRating;
+  final int? userRatingCount;
 
   const Podcast({
     required this.rssUrl,
@@ -13,6 +16,8 @@ class Podcast {
     required this.description,
     required this.artworkUrl,
     required this.lastCheckedAt,
+    this.averageUserRating,
+    this.userRatingCount,
   });
 
   factory Podcast.fromMap(Map<String, Object?> map) {

@@ -14,7 +14,7 @@ import '../features/podcast_detail/services/rss_feed_service.dart';
 // ── Public constants (imported by main.dart for registration) ─────────────────
 
 const String kBackgroundSyncTaskName = 'minacast_daily_sync';
-const String kNotificationChannelId = 'com.example.minacast.new_episodes';
+const String kNotificationChannelId = 'com.developingwoot.minacast.new_episodes';
 const String kNotificationChannelName = 'New Episodes';
 
 // ── WorkManager entry point ───────────────────────────────────────────────────

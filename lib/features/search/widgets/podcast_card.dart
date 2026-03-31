@@ -44,14 +44,76 @@ class PodcastCard extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: text.bodyLarge,
       ),
-      subtitle: podcast.author.isNotEmpty
-          ? Text(
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (podcast.author.isNotEmpty)
+            Text(
               podcast.author,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: text.bodySmall,
-            )
-          : null,
+            ),
+          if (podcast.averageUserRating != null &&
+              podcast.userRatingCount != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: _RatingRow(
+                rating: podcast.averageUserRating!,
+                count: podcast.userRatingCount!,
+                colors: colors,
+                text: text,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingRow extends StatelessWidget {
+  const _RatingRow({
+    required this.rating,
+    required this.count,
+    required this.colors,
+    required this.text,
+  });
+
+  final double rating;
+  final int count;
+  final ColorScheme colors;
+  final TextTheme text;
+
+  String _formatCount(int n) {
+    if (n >= 1000) {
+      final double k = n / 1000.0;
+      return '(${k.toStringAsFixed(k >= 10 ? 0 : 1)}K)';
+    }
+    return '($n)';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final int fullStars = rating.floor();
+    final bool halfStar = (rating - fullStars) >= 0.5;
+    final int emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (int i = 0; i < fullStars; i++)
+          Icon(Icons.star, size: 12, color: colors.primary),
+        if (halfStar)
+          Icon(Icons.star_half, size: 12, color: colors.primary),
+        for (int i = 0; i < emptyStars; i++)
+          Icon(Icons.star_border, size: 12, color: colors.outline),
+        const SizedBox(width: 4),
+        Text(
+          _formatCount(count),
+          style: text.bodySmall?.copyWith(color: colors.outline),
+        ),
+      ],
     );
   }
 }

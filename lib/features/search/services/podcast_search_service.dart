@@ -45,6 +45,10 @@ class PodcastSearchService {
             map['artworkUrl600'] as String? ??
             map['artworkUrl100'] as String? ??
             '';
+        final double? averageUserRating =
+            (map['averageUserRating'] as num?)?.toDouble();
+        final int? userRatingCount =
+            (map['userRatingCount'] as num?)?.toInt();
 
         podcasts.add(
           Podcast(
@@ -56,6 +60,8 @@ class PodcastSearchService {
             description: '',
             artworkUrl: artworkUrl,
             lastCheckedAt: 0,
+            averageUserRating: averageUserRating,
+            userRatingCount: userRatingCount,
           ),
         );
       }

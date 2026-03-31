@@ -15,7 +15,9 @@ void main() {
               "feedUrl": "https://example.com/feed.xml",
               "collectionName": "Example Show",
               "artistName": "Example Author",
-              "artworkUrl600": "https://example.com/art.jpg"
+              "artworkUrl600": "https://example.com/art.jpg",
+              "averageUserRating": 4.5,
+              "userRatingCount": 1234
             }
           ]
         }
@@ -30,6 +32,32 @@ void main() {
       expect(results.first.title, 'Example Show');
       expect(results.first.author, 'Example Author');
       expect(results.first.artworkUrl, 'https://example.com/art.jpg');
+      expect(results.first.averageUserRating, 4.5);
+      expect(results.first.userRatingCount, 1234);
+    });
+
+    test('handles missing rating fields gracefully', () async {
+      final MockClient client = MockClient((http.Request request) async {
+        return http.Response('''
+        {
+          "results": [
+            {
+              "feedUrl": "https://example.com/feed.xml",
+              "collectionName": "No Rating Show",
+              "artistName": "Example Author",
+              "artworkUrl600": "https://example.com/art.jpg"
+            }
+          ]
+        }
+        ''', 200);
+      });
+
+      final PodcastSearchService service = PodcastSearchService(client: client);
+      final results = await service.search('example');
+
+      expect(results, hasLength(1));
+      expect(results.first.averageUserRating, isNull);
+      expect(results.first.userRatingCount, isNull);
     });
 
     test('returns empty list on a non-200 response', () async {

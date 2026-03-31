@@ -38,6 +38,11 @@ class RssFeedService {
         if (audioUrl == null || audioUrl.isEmpty) {
           continue;
         }
+        final Uri? parsedAudioUrl = Uri.tryParse(audioUrl);
+        if (parsedAudioUrl == null ||
+            !const {'http', 'https'}.contains(parsedAudioUrl.scheme)) {
+          continue;
+        }
 
         final String title = _truncate(item.title ?? 'Untitled', 500);
         final String descriptionHtml = _truncate(
