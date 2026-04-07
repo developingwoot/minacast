@@ -141,6 +141,24 @@ If the user asks you to do something that would:
 
 ---
 
+## Skills
+
+### `build` — Build a release AAB
+
+**Trigger:** User says "build", "build the aab", "build release", or similar.
+
+**Steps (execute in order, no confirmation needed):**
+
+1. Read `pubspec.yaml` and find the current `version` line (format: `major.minor.patch+buildNumber`).
+2. Increment **only** the build number (the integer after `+`) by 1. Do not change the version name unless the user asks.
+3. Write the updated version back to `pubspec.yaml`.
+4. Run `flutter build appbundle --release` and report the output path and file size when done.
+5. Confirm the new version string to the user (e.g. `Built 1.0.3+6 → build/app/outputs/bundle/release/minacast.1.0.3.aab`).
+
+**Do not** bump the version name (`major.minor.patch`) unless the user explicitly asks.
+
+---
+
 ## End of Session
 
 When the user says "we're done" or "end session", follow this process in order:
