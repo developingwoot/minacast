@@ -218,7 +218,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Episode>> feedState = ref.watch(feedProvider);
-    final FeedSortOrder sortOrder = ref.watch(feedSortProvider);
+    final FeedSortOrder sortOrder =
+        ref.watch(feedSortProvider).value ?? FeedSortOrder.newestFirst;
     final Set<String> downloadingGuids = ref.watch(downloadingEpisodesProvider);
 
     final List<Episode>? episodes = feedState.asData?.value;

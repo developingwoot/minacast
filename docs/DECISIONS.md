@@ -14,13 +14,15 @@
 
 ---
 
-## Sort toggle is ephemeral (not persisted to settings)
+## Sort order is persisted to the settings table
 
-- **Date:** 2026-03-30
+- **Date:** 2026-04-07 (supersedes 2026-03-30 "Sort toggle is ephemeral" decision)
 - **Status:** Active
-- **Decision:** `feedSortProvider` is an in-memory `NotifierProvider`. Sort order resets to newest-first on cold start.
-- **Why:** Keeps the implementation simple — no settings table write needed, no migration risk. The sort order is a session preference, not a long-lived user setting like dark mode or playback speed.
-- **Revisit if:** Users consistently complain about losing their sort preference on restart.
+- **Decision:** `feedSortProvider` is now an `AsyncNotifier<FeedSortOrder>` that loads `feed_sort_order` from the SQLite settings table on startup and writes it back on every toggle. Sort order survives cold starts.
+- **Why:** User reported losing their sort preference on every app restart. The implementation cost was low — one new default settings row, a minor provider refactor, and no schema migration. The previous reasoning (session-only preference) did not hold up in practice.
+- **Alternatives considered:** Adding `feedSortOrder` to `AppSettings` / `AppSettingsNotifier` — consistent but adds coupling between unrelated settings; keeping sort self-contained in its own notifier is cleaner.
+- **Consequences:** `feedProvider` uses `ref.watch(feedSortProvider.future)` to await the persisted value before querying. `FeedSortOrderNotifier` reads/writes the database directly (same pattern as `AppSettingsNotifier`).
+- **Revisit if:** Never — persisted preferences are strictly better UX.
 
 ---
 

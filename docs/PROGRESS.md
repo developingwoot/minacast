@@ -136,6 +136,14 @@
   - `getDownloadedEpisodeCount()` added to `DatabaseHelper` — counts episodes where `local_file_path IS NOT NULL AND is_completed = 0`
   - Bumped to version `1.0.3+4`
   - All 75 tests pass
+- [x] **Persist home feed sort order across sessions**
+  - `FeedSortOrderNotifier` changed from an in-memory `NotifierProvider` to an `AsyncNotifier` that loads `feed_sort_order` from the SQLite settings table on startup and saves it on every toggle
+  - Added `{'key': 'feed_sort_order', 'value': 'newest_first'}` to `_defaultSettings` in `DatabaseHelper` (no schema migration needed)
+  - `feedProvider` now uses `ref.watch(feedSortProvider.future)` to properly await the persisted sort order before querying episodes — eliminates a Riverpod race where `feedProvider` was re-triggered mid-load
+  - Removed a dead `..sort()` by `pubDate` in `QueueService.addEpisodes` that would have overridden caller-supplied order if bulk-add is ever implemented; `addEpisodes` now preserves insertion order
+  - Added `test/features/home/feed_sort_provider_test.dart` (4 tests) covering defaults, toggle persistence, toggle-back, and cross-container reload
+  - Updated `queue_service_test.dart` to assert insertion order is preserved (not pubDate-sorted)
+  - All 79 tests pass
 
 ---
 

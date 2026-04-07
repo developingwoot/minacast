@@ -57,7 +57,7 @@ void main() {
     );
   });
 
-  test('addEpisodes appends oldest-to-newest and skips duplicates', () async {
+  test('addEpisodes preserves insertion order and skips duplicates', () async {
     final QueueService queueService = QueueService(
       databaseHelper: DatabaseHelper.instance,
     );
@@ -71,6 +71,7 @@ void main() {
       'middle',
     ))!;
 
+    // Pass in newest-first order to confirm insertion order is preserved
     final QueueAddResult firstResult = await queueService.addEpisodes(<Episode>[
       newest,
       oldest,
@@ -85,10 +86,11 @@ void main() {
     expect(firstResult.skippedCount, 0);
     expect(duplicateResult.addedCount, 0);
     expect(duplicateResult.skippedCount, 1);
+    // Order must match the caller's insertion order, not pubDate
     expect(queue.map((entry) => entry.episodeGuid).toList(), <String>[
+      'newest',
       'oldest',
       'middle',
-      'newest',
     ]);
   });
 

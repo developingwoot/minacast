@@ -38,10 +38,7 @@ class QueueService {
     int addedCount = 0;
     int skippedCount = 0;
 
-    final List<Episode> sortedEpisodes = List<Episode>.from(episodes)
-      ..sort((Episode a, Episode b) => a.pubDate.compareTo(b.pubDate));
-
-    for (final Episode episode in sortedEpisodes) {
+    for (final Episode episode in episodes) {
       if (existingGuids.contains(episode.guid)) {
         skippedCount += 1;
         continue;

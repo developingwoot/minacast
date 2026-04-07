@@ -57,6 +57,7 @@ const List<Map<String, String>> _defaultSettings = [
   {'key': 'dark_mode', 'value': 'false'},
   {'key': 'playback_speed', 'value': '1.0'},
   {'key': 'sleep_timer_default_minutes', 'value': '30'},
+  {'key': 'feed_sort_order', 'value': 'newest_first'},
 ];
 
 class DatabaseHelper {
