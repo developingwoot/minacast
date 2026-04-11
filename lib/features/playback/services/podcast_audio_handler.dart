@@ -304,6 +304,16 @@ class PodcastAudioHandler extends BaseAudioHandler
   }
 
   @override
+  Future<void> skipToNext() async {
+    await skipForward30();
+  }
+
+  @override
+  Future<void> skipToPrevious() async {
+    await skipBackward30();
+  }
+
+  @override
   Future<void> setPlaybackSpeed(double speed) async {
     await _player.setSpeed(speed);
     await _databaseHelper.setSetting(
@@ -404,6 +414,8 @@ class PodcastAudioHandler extends BaseAudioHandler
           MediaAction.stop,
           MediaAction.rewind,
           MediaAction.fastForward,
+          MediaAction.skipToNext,
+          MediaAction.skipToPrevious,
         },
         androidCompactActionIndices: const <int>[0, 1, 3],
         processingState: _mapProcessingState(_player.processingState),

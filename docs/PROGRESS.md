@@ -147,6 +147,11 @@
 - [x] **Release build tooling: `build` skill + version bump to 1.0.3+5**
   - Added a `build` skill to `AGENTS.md` — saying "build" now triggers an automated version-code increment and `flutter build appbundle --release`
   - Bumped version from `1.0.3+4` → `1.0.3+5`; signed AAB rebuilt at `build/app/outputs/bundle/release/minacast.1.0.1.aab` (52.5 MB)
+- [x] **Car/Bluetooth forward-back button fix**
+  - Overrode `skipToNext` and `skipToPrevious` in `PodcastAudioHandler` to delegate to `skipForward30`/`skipBackward30`
+  - Added `MediaAction.skipToNext` and `MediaAction.skipToPrevious` to `systemActions` in `_broadcastPlaybackState` so Android's MediaSession advertises support for these actions
+  - Root cause: car head units and Bluetooth remotes send `KEYCODE_MEDIA_NEXT`/`KEYCODE_MEDIA_PREVIOUS` (not `fastForward`/`rewind`); the BaseAudioHandler no-ops were silently swallowing those commands
+  - All 79 tests pass
 
 ---
 
