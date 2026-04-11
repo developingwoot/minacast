@@ -34,22 +34,19 @@ void main() {
     await tester.pump();
 
     expect(find.text('Your feed is empty.'), findsOneWidget);
-    expect(find.text('Search Podcasts'), findsOneWidget);
+    expect(
+      find.text('Go to the Podcasts tab to search for shows and subscribe.'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('home search action opens search screen', (
+  testWidgets('home screen has no search icon (search moved to Podcasts tab)', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(buildTestApp(const <Episode>[]));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
 
-    await tester.tap(find.byTooltip('Search podcasts'));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Search for a podcast to get started.'), findsOneWidget);
+    expect(find.byTooltip('Search podcasts'), findsNothing);
   });
 
   testWidgets('home feed shows seeded episodes newest first', (

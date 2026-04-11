@@ -4,6 +4,7 @@ import '../../../data/models/episode.dart';
 import '../../../data/models/podcast.dart';
 import '../../../data/providers/database_provider.dart';
 import '../../home/providers/feed_provider.dart';
+import '../../subscriptions/providers/subscriptions_provider.dart';
 import '../services/rss_feed_service.dart';
 
 class PodcastDetailState {
@@ -81,6 +82,7 @@ class PodcastDetailNotifier extends AsyncNotifier<PodcastDetailState> {
         .insertPodcastWithEpisodes(podcastToInsert, current.episodes);
 
     ref.invalidate(feedProvider);
+    ref.invalidate(subscriptionsProvider);
     state = AsyncData(current.copyWith(isSubscribed: true));
   }
 
@@ -92,6 +94,7 @@ class PodcastDetailNotifier extends AsyncNotifier<PodcastDetailState> {
 
     await ref.read(databaseHelperProvider).deletePodcast(rssUrl);
     ref.invalidate(feedProvider);
+    ref.invalidate(subscriptionsProvider);
     state = AsyncData(current.copyWith(isSubscribed: false));
   }
 }

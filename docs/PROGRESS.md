@@ -152,6 +152,15 @@
   - Added `MediaAction.skipToNext` and `MediaAction.skipToPrevious` to `systemActions` in `_broadcastPlaybackState` so Android's MediaSession advertises support for these actions
   - Root cause: car head units and Bluetooth remotes send `KEYCODE_MEDIA_NEXT`/`KEYCODE_MEDIA_PREVIOUS` (not `fastForward`/`rewind`); the BaseAudioHandler no-ops were silently swallowing those commands
   - All 79 tests pass
+- [x] **Subscriptions tab + "Listen to this podcast"**
+  - Added a new Podcasts tab (middle of bottom nav) that replaces the old search icon on Home
+  - `SubscriptionsScreen` shows subscribed podcasts when the search field is empty, and iTunes search results while typing — both navigate into `PodcastDetailScreen`
+  - `subscriptionsProvider` (`FutureProvider<List<Podcast>>`) introduced; invalidated on subscribe/unsubscribe so the list stays live
+  - Added a "Listen to this podcast" filled button to `PodcastDetailScreen` (visible only when subscribed) — tapping it replaces the queue with all episodes oldest-to-newest and starts playback immediately
+  - Removed search icon from Home app bar; updated Home empty-state text to point users to the Podcasts tab
+  - Updated two widget tests to match the new Home screen UI
+  - Bumped version to `1.0.3+6`; signed AAB rebuilt at `build/app/outputs/bundle/release/minacast.1.0.1.aab` (52.5 MB)
+  - All 79 tests pass
 
 ---
 

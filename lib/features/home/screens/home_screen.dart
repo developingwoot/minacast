@@ -13,21 +13,12 @@ import '../../playback/providers/playback_providers.dart';
 import '../../podcast_detail/widgets/episode_list_item.dart';
 import '../../queue/providers/queue_providers.dart';
 import '../../queue/screens/queue_screen.dart';
-import '../../search/screens/search_screen.dart';
 import '../providers/downloading_episodes_provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/feed_sort_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  Future<void> _openSearch(BuildContext context) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) => const SearchScreen(),
-      ),
-    );
-  }
 
   Future<void> _openEpisodeDetail(BuildContext context, Episode episode) async {
     await Navigator.of(context).push<void>(
@@ -251,11 +242,6 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () => _openQueue(context),
             icon: const Icon(Icons.queue_music_outlined),
           ),
-          IconButton(
-            tooltip: 'Search podcasts',
-            onPressed: () => _openSearch(context),
-            icon: const Icon(Icons.search),
-          ),
         ],
       ),
       body: feedState.when(
@@ -271,7 +257,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         data: (List<Episode> episodes) {
           if (episodes.isEmpty) {
-            return _HomeEmptyState(onSearchPressed: () => _openSearch(context));
+            return const _HomeEmptyState();
           }
 
           return RefreshIndicator(
@@ -335,9 +321,7 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomeEmptyState extends StatelessWidget {
-  const _HomeEmptyState({required this.onSearchPressed});
-
-  final VoidCallback onSearchPressed;
+  const _HomeEmptyState();
 
   @override
   Widget build(BuildContext context) {
@@ -359,15 +343,9 @@ class _HomeEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Search for a podcast and subscribe to start filling your home feed.',
+              'Go to the Podcasts tab to search for shows and subscribe.',
               style: textTheme.bodyMedium?.copyWith(color: colors.outline),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onSearchPressed,
-              icon: const Icon(Icons.search),
-              label: const Text('Search Podcasts'),
             ),
           ],
         ),

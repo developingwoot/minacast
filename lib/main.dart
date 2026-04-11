@@ -17,6 +17,7 @@ import 'features/playback/services/podcast_audio_handler.dart';
 import 'features/playback/widgets/mini_player.dart';
 import 'features/settings/providers/settings_providers.dart';
 import 'features/settings/screens/settings_screen.dart';
+import 'features/subscriptions/screens/subscriptions_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -210,7 +211,11 @@ class AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<AppShell> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _tabs = <Widget>[HomeScreen(), SettingsScreen()];
+  static const List<Widget> _tabs = <Widget>[
+    HomeScreen(),
+    SubscriptionsScreen(),
+    SettingsScreen(),
+  ];
 
   @override
   void initState() {
@@ -255,6 +260,11 @@ class _AppShellState extends ConsumerState<AppShell> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.podcasts_outlined),
+            activeIcon: Icon(Icons.podcasts),
+            label: 'Podcasts',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),

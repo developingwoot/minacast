@@ -2,8 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../data/models/episode.dart';
 import '../../../data/models/podcast.dart';
+import '../../../data/providers/database_provider.dart';
 import '../../episode_detail/screens/episode_detail_screen.dart';
+import '../../playback/providers/playback_providers.dart';
+import '../../queue/providers/queue_providers.dart';
 import '../providers/podcast_detail_provider.dart';
 import '../widgets/episode_list_item.dart';
 
@@ -125,6 +129,13 @@ class _PodcastDetailBody extends ConsumerWidget {
             child: _SubscribeButton(podcast: podcast, detail: detail),
           ),
         ),
+        if (detail.isSubscribed)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: _ListenButton(podcast: podcast),
+            ),
+          ),
         if (detail.description.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -232,6 +243,69 @@ class _SubscribeButtonState extends ConsumerState<_SubscribeButton> {
       onPressed: _toggle,
       icon: const Icon(Icons.add),
       label: const Text('Subscribe'),
+    );
+  }
+}
+
+class _ListenButton extends ConsumerStatefulWidget {
+  const _ListenButton({required this.podcast});
+
+  final Podcast podcast;
+
+  @override
+  ConsumerState<_ListenButton> createState() => _ListenButtonState();
+}
+
+class _ListenButtonState extends ConsumerState<_ListenButton> {
+  bool _loading = false;
+
+  Future<void> _listen() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final List<Episode> episodes = await ref
+          .read(databaseHelperProvider)
+          .getEpisodesForPodcast(widget.podcast.rssUrl);
+
+      // getEpisodesForPodcast returns newest-first; reverse for oldest-first.
+      final List<Episode> oldestFirst = episodes.reversed.toList();
+
+      await ref.read(queueProvider.notifier).replaceQueueAndPlay(
+        oldestFirst,
+        ref.read(playbackControllerProvider),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not start playback. Please try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const SizedBox(
+        height: 40,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return FilledButton.icon(
+      onPressed: _listen,
+      icon: const Icon(Icons.play_arrow),
+      label: const Text('Listen to this podcast'),
     );
   }
 }
