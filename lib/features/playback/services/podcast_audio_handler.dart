@@ -232,6 +232,12 @@ class PodcastAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
+    // After stopPlayback() just_audio still holds the old source, so playing
+    // would resume audio the handler no longer tracks and autoplay would never
+    // advance when it ends. Only play when we know which episode it is.
+    if (_currentEpisode == null) {
+      return;
+    }
     await _player.play();
   }
 
@@ -240,9 +246,13 @@ class PodcastAudioHandler extends BaseAudioHandler
     await _player.pause();
   }
 
+  /// System/media-session stop (notification, car, Bluetooth disconnect). This
+  /// must not forget the current episode: Android may auto-resume playback on
+  /// reconnect, and completion handling needs the episode to advance the queue.
+  /// Use [stopPlayback] to end playback deliberately.
   @override
   Future<void> stop() async {
-    await stopPlayback();
+    await _player.pause();
   }
 
   @override
