@@ -161,6 +161,12 @@
   - Updated two widget tests to match the new Home screen UI
   - Bumped version to `1.0.3+6`; signed AAB rebuilt at `build/app/outputs/bundle/release/minacast.1.0.1.aab` (52.5 MB)
   - All 79 tests pass
+- [x] **Bluetooth reconnect autoplay fix + DB upsert/WAL fixes**
+  - `PodcastAudioHandler.stop()` now pauses instead of clearing the current episode, and `play()` is a no-op with no tracked episode — fixes Play All not advancing after a Bluetooth disconnect/auto-resume (just_audio retains its source after `stop()`, so audio resumed while the handler had forgotten the episode)
+  - Replaced `INSERT OR REPLACE` in `insertPodcast`, `insertPodcastWithEpisodes` and `upsertEpisode` with insert-or-update; REPLACE cascaded through `foreign_keys = ON` and wiped episodes, queue rows, listened position, completion and download paths on re-subscribe
+  - Restored `PRAGMA journal_mode = WAL` (via `rawQuery`) in `onConfigure`; it had been lost from the code
+  - Added `test/data/database_upsert_wal_test.dart` (tests written first and confirmed failing); all 84 tests pass
+  - Handler change has no automated test (needs a real `just_audio` player) — verify on device in the car
 
 ---
 

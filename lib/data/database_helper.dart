@@ -84,6 +84,10 @@ class DatabaseHelper {
       version: _dbVersion,
       onConfigure: (Database db) async {
         await db.execute('PRAGMA foreign_keys = ON');
+        // WAL lets the background isolate and the UI isolate share the file
+        // without blocking each other. PRAGMA journal_mode returns a row, so it
+        // must go through rawQuery — execute() throws on Android.
+        await db.rawQuery('PRAGMA journal_mode = WAL');
       },
       onCreate: (Database db, int version) async {
         await db.execute(_createPodcastsTable);
@@ -110,11 +114,7 @@ class DatabaseHelper {
   Future<void> insertPodcast(Podcast podcast) async {
     try {
       final Database db = await database;
-      await db.insert(
-        'podcasts',
-        podcast.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _upsertPodcast(db, podcast);
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('insertPodcast failed: $e');
       rethrow;
@@ -183,23 +183,65 @@ class DatabaseHelper {
     try {
       final Database db = await database;
       await db.transaction((Transaction txn) async {
-        await txn.insert(
-          'podcasts',
-          podcast.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await _upsertPodcast(txn, podcast);
         for (final Episode episode in episodes) {
-          await txn.insert(
-            'episodes',
-            episode.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await _upsertEpisode(txn, episode);
         }
       });
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('insertPodcastWithEpisodes failed: $e');
       rethrow;
     }
+  }
+
+  // These upserts insert-or-update instead of INSERT OR REPLACE. REPLACE
+  // deletes the old row first, and with foreign_keys ON that cascades: replacing
+  // a podcast deletes its episodes and queue rows, and replacing an episode
+  // resets listened position, completion, and the downloaded file path.
+
+  Future<void> _upsertPodcast(DatabaseExecutor db, Podcast podcast) async {
+    final Map<String, Object?> map = podcast.toMap();
+    await db.insert(
+      'podcasts',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+    await db.update(
+      'podcasts',
+      <String, Object?>{
+        'title': map['title'],
+        'author': map['author'],
+        'description': map['description'],
+        'artwork_url': map['artwork_url'],
+        'last_checked_at': map['last_checked_at'],
+      },
+      where: 'rss_url = ?',
+      whereArgs: <Object?>[podcast.rssUrl],
+    );
+  }
+
+  /// Inserts the episode, or refreshes only its feed-derived metadata when it
+  /// already exists. User state (position, completion, local file) is untouched.
+  Future<void> _upsertEpisode(DatabaseExecutor db, Episode episode) async {
+    final Map<String, Object?> map = episode.toMap();
+    await db.insert(
+      'episodes',
+      map,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+    await db.update(
+      'episodes',
+      <String, Object?>{
+        'podcast_rss_url': map['podcast_rss_url'],
+        'title': map['title'],
+        'audio_url': map['audio_url'],
+        'description_html': map['description_html'],
+        'duration_seconds': map['duration_seconds'],
+        'pub_date': map['pub_date'],
+      },
+      where: 'guid = ?',
+      whereArgs: <Object?>[episode.guid],
+    );
   }
 
   // ── Episodes ──────────────────────────────────────────────────────────────
@@ -221,11 +263,7 @@ class DatabaseHelper {
   Future<void> upsertEpisode(Episode episode) async {
     try {
       final Database db = await database;
-      await db.insert(
-        'episodes',
-        episode.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _upsertEpisode(db, episode);
     } on DatabaseException catch (e) {
       if (kDebugMode) debugPrint('upsertEpisode failed: $e');
       rethrow;
